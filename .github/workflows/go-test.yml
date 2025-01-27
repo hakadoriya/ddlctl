@@ -48,7 +48,7 @@ jobs:
     outputs:
       skip: ${{ steps.paths-ignore.outputs.skip }}
     steps:
-      - uses: kunitsucom/github-actions-paths-ignore-alternative@v0.0.4
+      - uses: kunitsucom/github-actions-paths-ignore-alternative@v1.0.1
         id: paths-ignore
         with:
           paths-ignore: |-
@@ -160,7 +160,7 @@ jobs:
           else
             direnv exec . make test
           fi
-      - uses: codecov/codecov-action@v4 # ref. https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
+      - uses: codecov/codecov-action@v5 # ref. https://github.com/codecov/codecov-action#example-workflowyml-with-codecov-action
         if: ${{ env.COVER == 'true' }}
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
