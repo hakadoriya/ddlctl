@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
-	"github.com/kunitsucom/util.go/version"
+	"github.com/hakadoriya/z.go/buildinfoz"
+	"github.com/hakadoriya/z.go/cliz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddlctl/apply"
@@ -21,15 +21,15 @@ import (
 var (
 	optLanguage = &cliz.StringOption{
 		Name:        consts.OptionLanguage,
-		Environment: consts.EnvKeyLanguage,
+		Env:         consts.EnvKeyLanguage,
 		Description: "programming language to generate DDL",
-		Default:     cliz.Default("go"),
+		Default:     "go",
 	}
 	optDialect = &cliz.StringOption{
 		Name:        consts.OptionDialect,
-		Environment: consts.EnvKeyDialect,
+		Env:         consts.EnvKeyDialect,
 		Description: "SQL dialect to generate DDL",
-		Default:     cliz.Default(""),
+		Default:     "",
 	}
 	opts = []cliz.Option{
 		optLanguage,
@@ -37,21 +37,21 @@ var (
 		// Golang
 		&cliz.StringOption{
 			Name:        consts.OptionGoColumnTag,
-			Environment: consts.EnvKeyGoColumnTag,
+			Env:         consts.EnvKeyGoColumnTag,
 			Description: "column annotation key for Go struct tag",
-			Default:     cliz.Default("db"),
+			Default:     "db",
 		},
 		&cliz.StringOption{
 			Name:        consts.OptionGoDDLTag,
-			Environment: consts.EnvKeyGoDDLTag,
+			Env:         consts.EnvKeyGoDDLTag,
 			Description: "DDL annotation key for Go struct tag",
-			Default:     cliz.Default("ddlctl"),
+			Default:     "ddlctl",
 		},
 		&cliz.StringOption{
 			Name:        consts.OptionGoPKTag,
-			Environment: consts.EnvKeyGoPKTag,
+			Env:         consts.EnvKeyGoPKTag,
 			Description: "primary key annotation key for Go struct tag",
-			Default:     cliz.Default("pk"),
+			Default:     "pk",
 		},
 	}
 )
@@ -67,35 +67,35 @@ func DDLCtl(ctx context.Context) error {
 				Name:        "version",
 				Usage:       "ddlctl version",
 				Description: "show version",
-				RunFunc: func(_ context.Context, _ []string) error {
-					fmt.Printf("version: %s\n", version.Version())           //nolint:forbidigo
-					fmt.Printf("revision: %s\n", version.Revision())         //nolint:forbidigo
-					fmt.Printf("build branch: %s\n", version.Branch())       //nolint:forbidigo
-					fmt.Printf("build timestamp: %s\n", version.Timestamp()) //nolint:forbidigo
+				ExecFunc: func(c *cliz.Command, args []string) error {
+					fmt.Printf("version: %s\n", buildinfoz.BuildVersion())           //nolint:forbidigo
+					fmt.Printf("revision: %s\n", buildinfoz.BuildRevision())         //nolint:forbidigo
+					fmt.Printf("build branch: %s\n", buildinfoz.BuildBranch())       //nolint:forbidigo
+					fmt.Printf("build timestamp: %s\n", buildinfoz.BuildTimestamp()) //nolint:forbidigo
 					return nil
 				},
 			},
 			{
 				Name:        "generate",
-				Short:       "gen",
+				Aliases:     []string{"gen"},
 				Usage:       "ddlctl generate [options] --dialect <DDL dialect> <source> <destination>",
 				Description: "generate DDL from source (file or directory) to destination (file or directory).",
 				Options:     opts,
-				RunFunc:     generate.Command,
+				ExecFunc:    generate.Command,
 			},
 			{
 				Name:        "show",
 				Usage:       "ddlctl show --dialect <DDL dialect> <DSN>",
 				Description: "show DDL from DSN like `SHOW CREATE TABLE`.",
 				Options:     []cliz.Option{optDialect},
-				RunFunc:     show.Command,
+				ExecFunc:    show.Command,
 			},
 			{
 				Name:        "diff",
 				Usage:       "ddlctl diff [options] --dialect <DDL dialect> <before DDL source> <after DDL source>",
 				Description: "diff DDL from <before DDL source> to <after DDL source>.",
 				Options:     opts,
-				RunFunc:     diff.Command,
+				ExecFunc:    diff.Command,
 			},
 			{
 				Name:        "apply",
@@ -104,40 +104,31 @@ func DDLCtl(ctx context.Context) error {
 				Options: append(opts,
 					&cliz.BoolOption{
 						Name:        consts.OptionAutoApprove,
-						Environment: consts.EnvKeyAutoApprove,
+						Env:         consts.EnvKeyAutoApprove,
 						Description: "auto approve",
-						Default:     cliz.Default(false),
+						Default:     false,
 					},
 				),
-				RunFunc: apply.Command,
+				ExecFunc: apply.Command,
 			},
 		},
 		Options: []cliz.Option{
 			&cliz.BoolOption{
 				Name:        consts.OptionTrace,
-				Environment: consts.EnvKeyTrace,
+				Env:         consts.EnvKeyTrace,
 				Description: "trace mode enabled",
-				Default:     cliz.Default(false),
+				Default:     false,
 			},
 			&cliz.BoolOption{
 				Name:        consts.OptionDebug,
-				Environment: consts.EnvKeyDebug,
+				Env:         consts.EnvKeyDebug,
 				Description: "debug mode",
-				Default:     cliz.Default(false),
+				Default:     false,
 			},
-		},
-		RunFunc: func(ctx context.Context, _ []string) error {
-			cmd, err := cliz.FromContext(ctx)
-			if err != nil {
-				return apperr.Errorf("cliz.FromContext: %w", err)
-			}
-
-			cmd.ShowUsage()
-			return cliz.ErrHelp
 		},
 	}
 
-	if err := cmd.Run(ctx, os.Args); err != nil {
+	if err := cmd.Exec(ctx, os.Args); err != nil {
 		if errors.Is(err, cliz.ErrHelp) {
 			return nil
 		}

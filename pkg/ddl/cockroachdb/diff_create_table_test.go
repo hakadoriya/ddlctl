@@ -3,8 +3,8 @@ package cockroachdb
 import (
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 
 	"github.com/kunitsucom/ddlctl/pkg/ddl"
 )

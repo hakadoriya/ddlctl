@@ -7,8 +7,8 @@ import (
 	"runtime"
 	"strings"
 
-	filepathz "github.com/kunitsucom/util.go/path/filepath"
-	stringz "github.com/kunitsucom/util.go/strings"
+	"github.com/hakadoriya/z.go/pathz/filepathz"
+	"github.com/hakadoriya/z.go/stringz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 
@@ -67,7 +67,7 @@ func (p *Parser) nextToken() {
 	p.peekToken = p.l.NextToken()
 
 	_, file, line, _ := runtime.Caller(1)
-	logs.Trace.Printf("🪲: nextToken: caller=%s:%d currentToken: %#v, peekToken: %#v", filepathz.Short(file), line, p.currentToken, p.peekToken)
+	logs.Trace.Printf("🪲: nextToken: caller=%s:%d currentToken: %#v, peekToken: %#v", filepathz.ExtractShortPath(file), line, p.currentToken, p.peekToken)
 }
 
 // Parse はSQL文を解析します。

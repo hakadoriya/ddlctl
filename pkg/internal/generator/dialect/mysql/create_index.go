@@ -3,7 +3,7 @@ package mysql
 import (
 	"fmt"
 
-	filepathz "github.com/kunitsucom/util.go/path/filepath"
+	"github.com/hakadoriya/z.go/pathz/filepathz"
 
 	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
 )
@@ -12,7 +12,7 @@ import (
 func fprintCreateIndex(buf *string, _ string, stmt *ddlast.CreateIndexStmt) {
 	// source
 	if stmt.SourceFile != "" {
-		fprintComment(buf, "", fmt.Sprintf("source: %s:%d", filepathz.Short(stmt.SourceFile), stmt.SourceLine))
+		fprintComment(buf, "", fmt.Sprintf("source: %s:%d", filepathz.ExtractShortPath(stmt.SourceFile), stmt.SourceLine))
 	}
 
 	// comments

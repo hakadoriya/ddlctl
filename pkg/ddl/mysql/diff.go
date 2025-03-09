@@ -3,8 +3,8 @@ package mysql
 import (
 	"reflect"
 
-	errorz "github.com/kunitsucom/util.go/errors"
-	"github.com/kunitsucom/util.go/exp/diff/simplediff"
+	simplediff "github.com/hakadoriya/z.go/diffz/simplediffz"
+	"github.com/hakadoriya/z.go/panicz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 
@@ -78,7 +78,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 				if err == nil {
 					result.Stmts = append(result.Stmts, alterStmt.Stmts...)
 				}
-				errorz.PanicOrIgnore(err, ddl.ErrNoDifference) // MEMO: If before and after table_name is match, DiffCreateTable does not return error except ddl.ErrNoDifference.
+				panicz.Panic(err, panicz.WithPanicOptionIgnoreErrors(ddl.ErrNoDifference)) // MEMO: If before and after table_name is match, DiffCreateTable does not return error except ddl.ErrNoDifference.
 				continue
 			}
 		case *CreateIndexStmt:

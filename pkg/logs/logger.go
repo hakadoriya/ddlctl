@@ -7,7 +7,7 @@ import (
 	"log"
 	"os"
 
-	ioz "github.com/kunitsucom/util.go/io"
+	ioz "github.com/hakadoriya/z.go/ioz"
 )
 
 //nolint:gochecknoglobals

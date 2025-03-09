@@ -3,7 +3,7 @@ package spanner
 import (
 	"reflect"
 
-	"github.com/kunitsucom/util.go/exp/diff/simplediff"
+	simplediff "github.com/hakadoriya/z.go/diffz/simplediffz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/ddl"

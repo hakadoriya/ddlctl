@@ -3,7 +3,7 @@ package util
 import (
 	"strings"
 
-	slicez "github.com/kunitsucom/util.go/slices"
+	"github.com/hakadoriya/z.go/slicez"
 )
 
 func TrimCommentElementHasPrefix(stringSlice []string, prefix string) []string {

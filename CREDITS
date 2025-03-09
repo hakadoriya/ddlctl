@@ -4795,8 +4795,8 @@ https://github.com/googleapis/go-sql-spanner
 
 ================================================================
 
-github.com/kunitsucom/util.go
-https://github.com/kunitsucom/util.go
+github.com/hakadoriya/z.go
+https://github.com/hakadoriya/z.go
 ----------------------------------------------------------------
                                  Apache License
                            Version 2.0, January 2004
@@ -7742,4 +7742,3 @@ See the License for the specific language governing permissions and
 limitations under the License.
 
 ================================================================
-

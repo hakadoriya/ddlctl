@@ -3,7 +3,7 @@ package cockroachdb
 import (
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/require"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 )
 
 func TestDropTableStmt_GetNameForDiff(t *testing.T) {

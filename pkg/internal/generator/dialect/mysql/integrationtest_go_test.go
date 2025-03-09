@@ -8,9 +8,8 @@ import (
 	"os"
 	"testing"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
 	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
@@ -24,7 +23,7 @@ func Test_integrationtest_go_spanner(t *testing.T) {
 		t.Parallel()
 
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -35,7 +34,7 @@ func Test_integrationtest_go_spanner(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)

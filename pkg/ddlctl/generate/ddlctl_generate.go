@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/hakadoriya/z.go/cliz"
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
 	"github.com/kunitsucom/ddlctl/pkg/internal/config"
@@ -17,7 +18,8 @@ import (
 	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
-func Command(ctx context.Context, args []string) error {
+func Command(c *cliz.Command, args []string) error {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}

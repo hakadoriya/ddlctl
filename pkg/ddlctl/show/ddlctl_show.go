@@ -7,7 +7,8 @@ import (
 	"io"
 	"os"
 
-	sqlz "github.com/kunitsucom/util.go/database/sql"
+	"github.com/hakadoriya/z.go/cliz"
+	"github.com/hakadoriya/z.go/databasez/sqlz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
@@ -21,7 +22,8 @@ import (
 	spanshow "github.com/kunitsucom/ddlctl/pkg/show/spanner"
 )
 
-func Command(ctx context.Context, args []string) error {
+func Command(c *cliz.Command, args []string) error {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}

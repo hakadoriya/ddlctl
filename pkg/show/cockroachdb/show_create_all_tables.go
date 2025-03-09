@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	sqlz "github.com/kunitsucom/util.go/database/sql"
+	"github.com/hakadoriya/z.go/databasez/sqlz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 )

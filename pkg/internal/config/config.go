@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"sync"
 
-	errorz "github.com/kunitsucom/util.go/errors"
-	cliz "github.com/kunitsucom/util.go/exp/cli"
+	"github.com/hakadoriya/z.go/cliz"
+	"github.com/hakadoriya/z.go/errorz"
 
 	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
 	"github.com/kunitsucom/ddlctl/pkg/logs"
@@ -68,10 +68,7 @@ func Load(ctx context.Context) (rollback func(), err error) {
 //
 //nolint:funlen
 func load(ctx context.Context) (cfg *config, err error) { //nolint:unparam
-	cmd, err := cliz.FromContext(ctx)
-	if err != nil {
-		return nil, apperr.Errorf("cliz.FromContext: %w", err)
-	}
+	cmd := cliz.MustFromContext(ctx)
 
 	c := &config{
 		Trace:       loadTrace(ctx, cmd),

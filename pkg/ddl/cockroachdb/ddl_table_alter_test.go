@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	"github.com/hakadoriya/z.go/testingz/assertz"
+	"github.com/hakadoriya/z.go/testingz/requirez"
 )
 
 func Test_isAlterTableAction(t *testing.T) {
@@ -42,8 +42,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" RENAME TO "accounts";` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -59,8 +59,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" RENAME COLUMN "name" TO "username";` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -76,8 +76,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" RENAME CONSTRAINT "users_pkey" TO "users_id_pkey";` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -98,8 +98,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ADD COLUMN "age" INTEGER;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -115,8 +115,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" DROP COLUMN "age";` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -135,8 +135,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" SET DATA TYPE INTEGER;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -155,8 +155,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT 0;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -174,8 +174,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -193,8 +193,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" SET NOT NULL;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -212,8 +212,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "users" ALTER COLUMN "age" DROP NOT NULL;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -236,8 +236,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "groups" ADD CONSTRAINT "groups_pkey" PRIMARY KEY ("id");` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -253,8 +253,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "groups" DROP CONSTRAINT "groups_pkey";` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -274,8 +274,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "groups" ALTER CONSTRAINT "groups_pkey" DEFERRABLE INITIALLY DEFERRED;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -295,8 +295,8 @@ func TestAlterTableStmt_String(t *testing.T) {
 		expected := `ALTER TABLE "groups" ALTER CONSTRAINT "groups_pkey" NOT DEFERRABLE INITIALLY IMMEDIATE;` + "\n"
 		actual := stmt.String()
 
-		if !assert.Equal(t, expected, actual) {
-			assert.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
+		if !assertz.Equal(t, expected, actual) {
+			assertz.Equal(t, fmt.Sprintf("%#v", expected), fmt.Sprintf("%#v", actual))
 		}
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})
@@ -310,5 +310,5 @@ func TestAlterTableStmt_GetNameForDiff(t *testing.T) {
 	expected := `users`
 	actual := stmt.GetNameForDiff()
 
-	require.Equal(t, expected, actual)
+	requirez.Equal(t, expected, actual)
 }

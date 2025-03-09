@@ -3,7 +3,7 @@ package mysql
 import (
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/require"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 )
 
 func Test_isStmt(t *testing.T) {

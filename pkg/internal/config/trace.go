@@ -3,7 +3,7 @@ package config
 import (
 	"context"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
+	"github.com/hakadoriya/z.go/cliz"
 
 	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
 )
