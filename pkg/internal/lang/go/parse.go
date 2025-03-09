@@ -157,6 +157,11 @@ func parseFile(ctx context.Context, filename string) ([]generator.Stmt, error) {
 		// columns
 		if r.StructType != nil {
 			for _, field := range r.StructType.Fields.List {
+				// skip not exported fields
+				if field.Names == nil || !field.Names[0].IsExported() {
+					continue
+				}
+
 				column := &generator.CreateTableColumn{}
 
 				tag := reflect.StructTag(strings.Trim(field.Tag.Value, "`"))
