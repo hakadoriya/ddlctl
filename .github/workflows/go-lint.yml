@@ -37,7 +37,7 @@ jobs:
     outputs:
       skip: ${{ steps.paths-ignore.outputs.skip }}
     steps:
-      - uses: kunitsucom/github-actions-paths-ignore-alternative@v0.0.4
+      - uses: kunitsucom/github-actions-paths-ignore-alternative@v1.0.1
         id: paths-ignore
         with:
           paths-ignore: |-
@@ -131,7 +131,7 @@ jobs:
           if [ -n "${GITHUB_TOKEN-}" ]; then
             direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
           fi
-      - uses: golangci/golangci-lint-action@v6.0.1 # ref. https://github.com/golangci/golangci-lint-action#how-to-use
+      - uses: golangci/golangci-lint-action@v6.5.0 # ref. https://github.com/golangci/golangci-lint-action#how-to-use
         with:
           working-directory: ${{ env.WORKDIR }}
           args: --timeout=600s
