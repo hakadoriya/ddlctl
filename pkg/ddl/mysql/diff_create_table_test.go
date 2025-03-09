@@ -22,6 +22,7 @@ func TestDiffCreateTable(t *testing.T) {
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -46,6 +47,7 @@ func TestDiffCreateTable(t *testing.T) {
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -78,6 +80,7 @@ ALTER TABLE "users" DEFAULT CHARSET=utf8mb4;
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -110,6 +113,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0);
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -145,6 +149,7 @@ ALTER TABLE "users" DROP COLUMN "age";
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -182,6 +187,7 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("name");
 ALTER TABLE "users" ALTER "age" DROP DEFAULT;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -213,6 +219,7 @@ ALTER TABLE "users" DROP CONSTRAINT users_age_check;
 ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" <> 0);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -258,6 +265,7 @@ CREATE UNIQUE INDEX public.app_users_unique_name ON "public.app_users" ("name");
 ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >= 0);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -286,6 +294,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL DEFAULT 0;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -313,6 +322,7 @@ ALTER TABLE "users" MODIFY "age" INTEGER NOT NULL DEFAULT 0;
 ALTER TABLE "users" MODIFY "age" INT NULL DEFAULT 0;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -343,6 +353,7 @@ ALTER TABLE "users" DROP PRIMARY KEY;
 ALTER TABLE "users" ADD PRIMARY KEY ("id", name);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -373,6 +384,7 @@ ALTER TABLE "users" DROP CONSTRAINT users_group_id_fkey;
 ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, name) REFERENCES "groups" ("id", name);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -399,6 +411,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, na
 CREATE UNIQUE INDEX users_unique_name ON "users" ("id", name);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -426,6 +439,7 @@ CREATE UNIQUE INDEX users_unique_name ON "users" ("id", name);
 ALTER TABLE "users" MODIFY "age" INT NOT NULL DEFAULT ((0 + 3) - 1 * 4 / 2);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -497,6 +511,7 @@ ALTER TABLE "users" MODIFY "age" INT NOT NULL DEFAULT ((0 + 3) - 1 * 4 / 2);
 -- +CONSTRAINT users_age_check CHECK ("age" >= 0)
 ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 `
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -528,6 +543,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
     CONSTRAINT users_age_check CHECK ("age" >= 0)
 );
 `
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			nil,
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -549,6 +565,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		ddls, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			nil,
@@ -576,6 +593,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id VARCHAR(36) NOT NULL, PRIMARY KEY ("id"));`)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
