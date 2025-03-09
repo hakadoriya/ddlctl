@@ -23,6 +23,7 @@ func TestDiffCreateTable(t *testing.T) {
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -48,6 +49,7 @@ func TestDiffCreateTable(t *testing.T) {
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -73,6 +75,7 @@ func TestDiffCreateTable(t *testing.T) {
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -105,6 +108,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0);
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -137,6 +141,7 @@ ALTER TABLE "users" DROP COLUMN "age";
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -168,6 +173,7 @@ ALTER TABLE "users" ALTER COLUMN "name" STRING NOT NULL;
 ALTER TABLE "users" ALTER COLUMN "age" DROP DEFAULT;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -199,6 +205,7 @@ ALTER TABLE "users" DROP CONSTRAINT users_age_check;
 ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" <> 0);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -238,6 +245,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_group_id_fkey FOREIGN KE
 ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >= 0);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -266,6 +274,7 @@ ALTER TABLE "public.app_users" ADD CONSTRAINT app_users_age_check CHECK ("age" >
 ALTER TABLE "users" ALTER COLUMN "age" INT64 NOT NULL;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -293,6 +302,7 @@ ALTER TABLE "users" ALTER COLUMN "age" INT64 NOT NULL;
 ALTER TABLE "users" ALTER COLUMN "age" INT64;
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -315,6 +325,7 @@ ALTER TABLE "users" ALTER COLUMN "age" INT64;
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -349,6 +360,7 @@ CREATE TABLE "users" (
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -374,6 +386,7 @@ ALTER TABLE "users" ADD ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 7 DA
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -399,6 +412,7 @@ ALTER TABLE "users" REPLACE ROW DELETION POLICY (OLDER_THAN(CreatedAt, INTERVAL 
 		afterDDL, err := NewParser(NewLexer(after)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -432,6 +446,7 @@ ALTER TABLE "users" DROP CONSTRAINT users_group_id_fkey;
 ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id, name) REFERENCES "groups" ("id", name);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -462,6 +477,7 @@ ALTER TABLE "users" DROP CONSTRAINT users_group_id_fkey;
 ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey_2 FOREIGN KEY (group_id) REFERENCES "groups" ("id");
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -489,6 +505,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_group_id_fkey_2 FOREIGN KEY (group_id) 
 ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -542,6 +559,7 @@ ALTER TABLE complex_defaults ALTER COLUMN updated_at SET OPTIONS (allow_commit_t
 ALTER TABLE complex_defaults ALTER COLUMN unique_code SET DEFAULT (GENERATE_UUID());
 `
 
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -566,6 +584,7 @@ ALTER TABLE complex_defaults ALTER COLUMN unique_code SET DEFAULT (GENERATE_UUID
 -- +CONSTRAINT users_age_check CHECK ("age" >= 0)
 ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 `
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -595,6 +614,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
     CONSTRAINT users_age_check CHECK ("age" >= 0)
 ) PRIMARY KEY ("id");
 `
+		//nolint:forcetypeassert
 		actual, err := DiffCreateTable(
 			nil,
 			afterDDL.Stmts[0].(*CreateTableStmt),
@@ -616,6 +636,7 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		beforeDDL, err := NewParser(NewLexer(before)).Parse()
 		require.NoError(t, err)
 
+		//nolint:forcetypeassert
 		ddls, err := DiffCreateTable(
 			beforeDDL.Stmts[0].(*CreateTableStmt),
 			nil,

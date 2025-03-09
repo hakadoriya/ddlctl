@@ -29,7 +29,7 @@ func (constraints Constraints) Append(constraint Constraint) Constraints {
 	constraints = append(constraints, constraint)
 
 	sort.Slice(constraints, func(left, _ int) bool {
-		_, leftIsPrimaryKeyConstraint := constraints[left].(*PrimaryKeyConstraint)
+		_, leftIsPrimaryKeyConstraint := constraints[left].(*PrimaryKeyConstraint) //nolint:forcetypeassert
 		switch {
 		case leftIsPrimaryKeyConstraint:
 			return true
