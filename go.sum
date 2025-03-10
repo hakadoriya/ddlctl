@@ -846,6 +846,10 @@ github.com/kr/pretty v0.3.0/go.mod h1:640gp4NfQd8pI5XOwp5fnNeVWj67G7CFk/SaSQn7NB
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
 github.com/kr/text v0.1.0/go.mod h1:4Jbv+DJW3UT/LiOwJeYQe1efqtUx/iVham/4vfdArNI=
 github.com/kr/text v0.2.0/go.mod h1:eLer722TekiGuMkidMxC/pM04lWEeraHUUmBw8l2grE=
+github.com/kunitsucom/ddlctl v0.0.17 h1:zR4Jy7uRd6wPzpXzQg4sMmopjTW05sRwKupZlk/Ri4Y=
+github.com/kunitsucom/ddlctl v0.0.17/go.mod h1:iXH7vvlgkV26PGGd4MvNtwRRT6Exs7RW4lIvdylBljw=
+github.com/kunitsucom/util.go v0.0.66 h1:+yVu2mXL2p7D+JjGI9RUtxyhgXcFJcE3eayUo4oDnOM=
+github.com/kunitsucom/util.go v0.0.66/go.mod h1:bYFf2JvRqVF1brBtpdt3xkkTGJBxmYBxZlItrc/lf7Y=
 github.com/lib/pq v1.10.9 h1:YXG7RB+JIjhP29X+OtkiDnYaXQwpS4JEWq7dtCCRUEw=
 github.com/lib/pq v1.10.9/go.mod h1:AlVN5x4E4T544tWzH6hKfbfQvm3HdbOxrmggDNAPY9o=
 github.com/lyft/protoc-gen-star v0.6.0/go.mod h1:TGAoBVkt8w7MPG72TrKIu85MIdXwDuzJYeZuUPFPNwA=
