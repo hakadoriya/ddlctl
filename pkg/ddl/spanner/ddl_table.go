@@ -4,9 +4,9 @@ import (
 	//diff:ignore-line-postgres-cockroach
 	"strings"
 
-	stringz "github.com/kunitsucom/util.go/strings"
+	"github.com/hakadoriya/z.go/stringz"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 type Constraint interface {

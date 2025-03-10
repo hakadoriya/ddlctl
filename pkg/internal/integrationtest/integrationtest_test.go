@@ -5,38 +5,36 @@ import (
 	"os"
 	"testing"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
-	testingz "github.com/kunitsucom/util.go/testing"
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	"github.com/hakadoriya/z.go/testingz"
+	"github.com/hakadoriya/z.go/testingz/assertz"
+	"github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
-	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
+	"github.com/hakadoriya/ddlctl/pkg/internal/fixture"
 )
 
 //nolint:paralleltest
 func Test_ddlctl_diff(t *testing.T) {
 	t.Run("success,go,postgres", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"--lang=go",
 			"--dialect=postgres",
 			"postgres_before.sql",
 			"postgres_after.sql",
 		})
-		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		requirez.NoError(t, err)
 
 		backup := os.Stdout
 		t.Cleanup(func() { os.Stdout = backup })
 
 		w, closeFunc, err := testingz.NewFileWriter(t)
-		require.NoError(t, err)
+		requirez.NoError(t, err)
 
 		os.Stdout = w
 		{
-			err := diff.Command(ctx, args)
-			require.NoError(t, err)
+			err := diff.Command(cmd, args)
+			requirez.NoError(t, err)
 		}
 		result := closeFunc()
 
@@ -53,6 +51,6 @@ ALTER TABLE public.test_users ADD COLUMN username TEXT NOT NULL;
 
 		actual := result.String()
 
-		assert.Equal(t, expected, actual)
+		assertz.Equal(t, expected, actual)
 	})
 }

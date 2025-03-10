@@ -3,7 +3,7 @@ package mysql
 import (
 	"strings"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 // MEMO: https://dev.mysql.com/doc/refman/8.0/ja/drop-index.html

@@ -6,7 +6,7 @@ import (
 	"go/token"
 	"io"
 
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 func dumpDDLSource(fset *token.FileSet, ddlSrc []*ddlSource) {

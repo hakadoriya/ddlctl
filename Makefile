@@ -6,7 +6,7 @@ export REPO_TMP_DIR       := ${REPO_ROOT}/.tmp
 export PRE_PUSH           := ${REPO_ROOT}/.git/hooks/pre-push
 export GIT_TAG_LATEST     := $(shell git describe --tags --abbrev=0)
 export GIT_BRANCH_CURRENT := $(shell git rev-parse --abbrev-ref HEAD)
-export GO_MODULE_NAME     := github.com/kunitsucom/ddlctl
+export GO_MODULE_NAME     := github.com/hakadoriya/ddlctl
 export BUILD_VERSION       = $(shell git describe --tags --exact-match HEAD 2>/dev/null || git rev-parse --short HEAD)
 export BUILD_REVISION      = $(shell git rev-parse HEAD)
 export BUILD_BRANCH        = $(shell git rev-parse --abbrev-ref HEAD | tr / -)
@@ -113,13 +113,13 @@ act-go-vuln: act-check ## Run go-vuln workflow in act
 .PHONY: build
 build:  ## Run goxz for build
 	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
-	goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/kunitsucom/util.go/version.version=${BUILD_VERSION} -X github.com/kunitsucom/util.go/version.revision=${BUILD_REVISION} -X github.com/kunitsucom/util.go/version.branch=${BUILD_BRANCH} -X github.com/kunitsucom/util.go/version.timestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
+	goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
 
 .PHONY: release
 release: ci ## Run goxz and gh release upload
 	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
 	git checkout main
 	git checkout "${GIT_TAG_LATEST}"
-	-goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/kunitsucom/util.go/version.version=${BUILD_VERSION} -X github.com/kunitsucom/util.go/version.revision=${BUILD_REVISION} -X github.com/kunitsucom/util.go/version.branch=${BUILD_BRANCH} -X github.com/kunitsucom/util.go/version.timestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
+	-goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
 	-gh release upload "`git describe --tags --abbrev=0`" "${REPO_TMP_DIR}"/*"`git describe --tags --abbrev=0`"*
 	git checkout "${GIT_BRANCH_CURRENT}"

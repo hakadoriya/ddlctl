@@ -4,7 +4,7 @@ import (
 	"context"
 	"log"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl"
 )
 
 func main() {

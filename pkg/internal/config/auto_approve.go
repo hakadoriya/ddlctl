@@ -3,9 +3,9 @@ package config
 import (
 	"context"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
+	"github.com/hakadoriya/z.go/cliz"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
 )
 
 func loadAutoApprove(_ context.Context, cmd *cliz.Command) bool {

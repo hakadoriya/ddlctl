@@ -48,7 +48,7 @@ jobs:
     outputs:
       skip: ${{ steps.paths-ignore.outputs.skip }}
     steps:
-      - uses: kunitsucom/github-actions-paths-ignore-alternative@v1.0.1
+      - uses: hakadoriya-actions/paths-filter-alternative@v1.0.1
         id: paths-ignore
         with:
           paths-ignore: |-

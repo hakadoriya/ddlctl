@@ -3,7 +3,7 @@ package cockroachdb
 import (
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/assert"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
 )
 
 func TestCreateTableStmt_String(t *testing.T) {

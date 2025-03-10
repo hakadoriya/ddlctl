@@ -1,11 +1,14 @@
-module github.com/kunitsucom/ddlctl
+module github.com/hakadoriya/ddlctl
 
-go 1.22.5
+go 1.23.4
+
+toolchain go1.23.5
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/googleapis/go-sql-spanner v1.6.0
-	github.com/kunitsucom/util.go v0.0.66
+	github.com/hakadoriya/z.go v0.0.1-0.20250309175519-1433e6247667
+	github.com/kunitsucom/ddlctl v0.0.17
 	github.com/lib/pq v1.10.9
 )
 
@@ -33,6 +36,7 @@ require (
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.3.2 // indirect
 	github.com/googleapis/gax-go/v2 v2.12.5 // indirect
+	github.com/kunitsucom/util.go v0.0.66 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.53.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.53.0 // indirect
