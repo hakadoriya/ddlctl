@@ -7,8 +7,8 @@ import (
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 // NOTE: https://cloud.google.com/spanner/docs/information-schema?hl=ja

@@ -8,8 +8,8 @@ import (
 	"github.com/hakadoriya/z.go/cliz"
 	"github.com/hakadoriya/z.go/errorz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 // Use a structure so that settings can be backed up.

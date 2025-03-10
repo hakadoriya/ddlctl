@@ -3,7 +3,7 @@ package generator
 import (
 	"regexp"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/lang/util"
+	"github.com/hakadoriya/ddlctl/pkg/internal/lang/util"
 )
 
 var _ Stmt = (*CreateIndexStmt)(nil)

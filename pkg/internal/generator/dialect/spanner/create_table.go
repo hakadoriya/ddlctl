@@ -7,7 +7,7 @@ import (
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 	"github.com/hakadoriya/z.go/slicez"
 
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
 )
 
 //nolint:cyclop,funlen,gocognit

@@ -3,7 +3,7 @@ package fixture
 import (
 	"github.com/hakadoriya/z.go/cliz"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
 )
 
 func Cmd() *cliz.Command {

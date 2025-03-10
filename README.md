@@ -1,22 +1,22 @@
-# [ddlctl](https://github.com/kunitsucom/ddlctl)
+# [ddlctl](https://github.com/hakadoriya/ddlctl)
 
 `ddlctl` is a tool to control RDBMS DDLs: output all RDBMS DDLs, generate DDLs from tagged Golang source code, view differences between RDBMS and your DDL, and automate migrations.
 
 > [!WARNING]
 > This project is experimental. It is operational in the author's environment, but it is not known if it can be operated in other environments without trouble.  
 
-[![license](https://img.shields.io/github/license/kunitsucom/ddlctl)](LICENSE)
-[![pkg](https://pkg.go.dev/badge/github.com/kunitsucom/ddlctl)](https://pkg.go.dev/github.com/kunitsucom/ddlctl)
-[![goreportcard](https://goreportcard.com/badge/github.com/kunitsucom/ddlctl)](https://goreportcard.com/report/github.com/kunitsucom/ddlctl)
-[![workflow](https://github.com/kunitsucom/ddlctl/workflows/go-lint/badge.svg)](https://github.com/kunitsucom/ddlctl/tree/main)
-[![workflow](https://github.com/kunitsucom/ddlctl/workflows/go-test/badge.svg)](https://github.com/kunitsucom/ddlctl/tree/main)
-[![workflow](https://github.com/kunitsucom/ddlctl/workflows/go-vuln/badge.svg)](https://github.com/kunitsucom/ddlctl/tree/main)
-[![codecov](https://codecov.io/gh/kunitsucom/ddlctl/graph/badge.svg?token=8Jtk2bpTe2)](https://codecov.io/gh/kunitsucom/ddlctl)
-[![sourcegraph](https://sourcegraph.com/github.com/kunitsucom/ddlctl/-/badge.svg)](https://sourcegraph.com/github.com/kunitsucom/ddlctl)
+[![license](https://img.shields.io/github/license/hakadoriya/ddlctl)](LICENSE)
+[![pkg](https://pkg.go.dev/badge/github.com/hakadoriya/ddlctl)](https://pkg.go.dev/github.com/hakadoriya/ddlctl)
+[![goreportcard](https://goreportcard.com/badge/github.com/hakadoriya/ddlctl)](https://goreportcard.com/report/github.com/hakadoriya/ddlctl)
+[![workflow](https://github.com/hakadoriya/ddlctl/workflows/go-lint/badge.svg)](https://github.com/hakadoriya/ddlctl/tree/main)
+[![workflow](https://github.com/hakadoriya/ddlctl/workflows/go-test/badge.svg)](https://github.com/hakadoriya/ddlctl/tree/main)
+[![workflow](https://github.com/hakadoriya/ddlctl/workflows/go-vuln/badge.svg)](https://github.com/hakadoriya/ddlctl/tree/main)
+[![codecov](https://codecov.io/gh/hakadoriya/ddlctl/graph/badge.svg?token=8Jtk2bpTe2)](https://codecov.io/gh/hakadoriya/ddlctl)
+[![sourcegraph](https://sourcegraph.com/github.com/hakadoriya/ddlctl/-/badge.svg)](https://sourcegraph.com/github.com/hakadoriya/ddlctl)
 
 ## Demo
 
-![ddlctl_demo](https://github.com/kunitsucom/ddlctl/assets/29125616/cdb603ad-bb44-4e18-8af0-ac5bce46e319)
+![ddlctl_demo](https://github.com/hakadoriya/ddlctl/assets/29125616/cdb603ad-bb44-4e18-8af0-ac5bce46e319)
 
 ## Overview
 
@@ -302,10 +302,10 @@ done
 ### pre-built binary
 
 ```bash
-LATEST_VERSION=$(curl -ISs https://github.com/kunitsucom/ddlctl/releases/latest | tr -d '\r' | awk -F/ '/location:/{print $NF}')
+LATEST_VERSION=$(curl -ISs https://github.com/hakadoriya/ddlctl/releases/latest | tr -d '\r' | awk -F/ '/location:/{print $NF}')
 OS=$(uname | tr '[:upper:]' '[:lower:]')
 ARCH=$(uname -m)
-URL="https://github.com/kunitsucom/ddlctl/releases/download/${LATEST_VERSION}/ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip"
+URL="https://github.com/hakadoriya/ddlctl/releases/download/${LATEST_VERSION}/ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip"
 
 # Check URL
 echo "${URL}"
@@ -320,7 +320,7 @@ unzip -j ddlctl_${LATEST_VERSION}_${OS}_${ARCH}.zip '*/ddlctl'
 ### go install
 
 ```bash
-go install github.com/kunitsucom/ddlctl/cmd/ddlctl@latest
+go install github.com/hakadoriya/ddlctl/cmd/ddlctl@latest
 ```
 
 ## Usage

@@ -15,16 +15,16 @@ import (
 	"github.com/hakadoriya/z.go/errorz"
 	retry "github.com/hakadoriya/z.go/retryz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
-	"github.com/kunitsucom/ddlctl/pkg/internal/util"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/util"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 //nolint:cyclop,funlen,gocognit,gocyclo

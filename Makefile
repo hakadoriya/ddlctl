@@ -6,7 +6,7 @@ export REPO_TMP_DIR       := ${REPO_ROOT}/.tmp
 export PRE_PUSH           := ${REPO_ROOT}/.git/hooks/pre-push
 export GIT_TAG_LATEST     := $(shell git describe --tags --abbrev=0)
 export GIT_BRANCH_CURRENT := $(shell git rev-parse --abbrev-ref HEAD)
-export GO_MODULE_NAME     := github.com/kunitsucom/ddlctl
+export GO_MODULE_NAME     := github.com/hakadoriya/ddlctl
 export BUILD_VERSION       = $(shell git describe --tags --exact-match HEAD 2>/dev/null || git rev-parse --short HEAD)
 export BUILD_REVISION      = $(shell git rev-parse HEAD)
 export BUILD_BRANCH        = $(shell git rev-parse --abbrev-ref HEAD | tr / -)

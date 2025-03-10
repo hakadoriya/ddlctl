@@ -6,9 +6,9 @@ import (
 	"github.com/hakadoriya/z.go/diffz/simplediffz"
 	"github.com/hakadoriya/z.go/panicz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
 )
 
 //nolint:funlen,cyclop,gocognit

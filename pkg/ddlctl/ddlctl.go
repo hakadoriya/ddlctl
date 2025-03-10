@@ -9,12 +9,12 @@ import (
 	"github.com/hakadoriya/z.go/buildinfoz"
 	"github.com/hakadoriya/z.go/cliz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/apply"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/apply"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/generate"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/show"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
 )
 
 //nolint:gochecknoglobals

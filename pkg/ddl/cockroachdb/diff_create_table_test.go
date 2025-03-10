@@ -6,7 +6,7 @@ import (
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
 )
 
 //nolint:paralleltest,tparallel

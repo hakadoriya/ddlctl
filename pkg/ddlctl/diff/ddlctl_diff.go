@@ -7,17 +7,17 @@ import (
 	"os"
 	"strings"
 
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	ddlpg "github.com/hakadoriya/ddlctl/pkg/ddl/postgres"
+	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/generate"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/show"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 	"github.com/hakadoriya/z.go/cliz"
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	ddlpg "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
-	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
 )
 
 func Command(c *cliz.Command, args []string) error {
