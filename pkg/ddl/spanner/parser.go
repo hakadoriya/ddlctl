@@ -11,9 +11,9 @@ import (
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 	"github.com/hakadoriya/z.go/stringz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 //nolint:gochecknoglobals

@@ -17,12 +17,12 @@ import (
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 	"github.com/hakadoriya/z.go/slicez"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	langutil "github.com/kunitsucom/ddlctl/pkg/internal/lang/util"
-	"github.com/kunitsucom/ddlctl/pkg/internal/util"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
+	langutil "github.com/hakadoriya/ddlctl/pkg/internal/lang/util"
+	"github.com/hakadoriya/ddlctl/pkg/internal/util"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 const (

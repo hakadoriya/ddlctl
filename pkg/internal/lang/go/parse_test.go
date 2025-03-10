@@ -11,10 +11,10 @@ import (
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/fixture"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
 )
 
 //nolint:paralleltest

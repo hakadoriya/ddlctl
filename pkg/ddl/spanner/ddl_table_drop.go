@@ -3,7 +3,7 @@ package spanner
 import (
 	"strings"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 // MEMO: https://www.postgresql.jp/docs/11/sql-createtable.html

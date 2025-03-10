@@ -10,9 +10,9 @@ import (
 
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 type ddlSource struct {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/hakadoriya/z.go/cliz"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
 )
 
 func loadPKTagGo(_ context.Context, cmd *cliz.Command) string {

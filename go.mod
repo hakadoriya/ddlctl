@@ -1,4 +1,4 @@
-module github.com/kunitsucom/ddlctl
+module github.com/hakadoriya/ddlctl
 
 go 1.23.4
 

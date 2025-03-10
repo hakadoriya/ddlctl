@@ -5,7 +5,7 @@ import (
 
 	"github.com/hakadoriya/z.go/stringz"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 // MEMO: https://www.cockroachlabs.com/docs/stable/create-index

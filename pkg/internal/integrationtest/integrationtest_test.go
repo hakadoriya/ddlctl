@@ -9,8 +9,8 @@ import (
 	"github.com/hakadoriya/z.go/testingz/assertz"
 	"github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
-	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
+	"github.com/hakadoriya/ddlctl/pkg/internal/fixture"
 )
 
 //nolint:paralleltest

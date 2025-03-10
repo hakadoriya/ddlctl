@@ -11,9 +11,9 @@ import (
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
-	ddlctlgo "github.com/kunitsucom/ddlctl/pkg/internal/lang/go"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/fixture"
+	ddlctlgo "github.com/hakadoriya/ddlctl/pkg/internal/lang/go"
 )
 
 func Test_integrationtest_go_spanner(t *testing.T) {

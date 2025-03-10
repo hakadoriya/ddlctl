@@ -3,7 +3,7 @@ package spanner
 import (
 	"strings"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 // MEMO: https://cloud.google.com/spanner/docs/reference/standard-sql/data-definition-language#alter_table

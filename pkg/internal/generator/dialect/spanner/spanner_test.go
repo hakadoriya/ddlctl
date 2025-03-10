@@ -11,8 +11,8 @@ import (
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 //nolint:paralleltest
