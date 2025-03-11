@@ -7,7 +7,9 @@ import (
 	"os"
 	"strings"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/z.go/cliz"
+
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
 	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
@@ -17,7 +19,6 @@ import (
 	"github.com/hakadoriya/ddlctl/pkg/ddlctl/show"
 	"github.com/hakadoriya/ddlctl/pkg/internal/config"
 	"github.com/hakadoriya/ddlctl/pkg/logs"
-	"github.com/hakadoriya/z.go/cliz"
 )
 
 func Command(c *cliz.Command, args []string) error {

@@ -3,7 +3,7 @@ package spanner
 import (
 	"io"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
 	"github.com/hakadoriya/ddlctl/pkg/logs"
 )

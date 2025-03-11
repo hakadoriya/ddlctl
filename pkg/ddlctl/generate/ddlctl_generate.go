@@ -6,7 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/z.go/cliz"
+
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	crdbddl "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
 	"github.com/hakadoriya/ddlctl/pkg/internal/config"
 	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
@@ -15,7 +17,6 @@ import (
 	"github.com/hakadoriya/ddlctl/pkg/internal/generator/dialect/spanner"
 	ddlctlgo "github.com/hakadoriya/ddlctl/pkg/internal/lang/go"
 	"github.com/hakadoriya/ddlctl/pkg/logs"
-	"github.com/hakadoriya/z.go/cliz"
 )
 
 func Command(c *cliz.Command, args []string) error {

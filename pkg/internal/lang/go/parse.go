@@ -17,7 +17,7 @@ import (
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 	"github.com/hakadoriya/z.go/slicez"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/internal/config"
 	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
 	langutil "github.com/hakadoriya/ddlctl/pkg/internal/lang/util"

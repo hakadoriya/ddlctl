@@ -6,7 +6,7 @@ import (
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 )
 
 type sqlQueryerContext = interface {

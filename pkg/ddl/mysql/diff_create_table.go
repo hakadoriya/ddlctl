@@ -6,7 +6,7 @@ import (
 
 	simplediff "github.com/hakadoriya/z.go/diffz/simplediffz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 )

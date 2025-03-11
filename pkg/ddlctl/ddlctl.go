@@ -9,7 +9,7 @@ import (
 	"github.com/hakadoriya/z.go/buildinfoz"
 	"github.com/hakadoriya/z.go/cliz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/ddlctl/apply"
 	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
 	"github.com/hakadoriya/ddlctl/pkg/ddlctl/generate"
@@ -67,7 +67,7 @@ func DDLCtl(ctx context.Context) error {
 				Name:        "version",
 				Usage:       "ddlctl version",
 				Description: "show version",
-				ExecFunc: func(c *cliz.Command, args []string) error {
+				ExecFunc: func(_ *cliz.Command, _ []string) error {
 					fmt.Printf("version: %s\n", buildinfoz.BuildVersion())           //nolint:forbidigo
 					fmt.Printf("revision: %s\n", buildinfoz.BuildRevision())         //nolint:forbidigo
 					fmt.Printf("build branch: %s\n", buildinfoz.BuildBranch())       //nolint:forbidigo

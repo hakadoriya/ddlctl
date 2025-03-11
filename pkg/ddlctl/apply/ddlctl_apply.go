@@ -15,7 +15,7 @@ import (
 	"github.com/hakadoriya/z.go/errorz"
 	retry "github.com/hakadoriya/z.go/retryz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
 	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"

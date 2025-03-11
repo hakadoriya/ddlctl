@@ -10,7 +10,7 @@ import (
 	"github.com/hakadoriya/z.go/cliz"
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	crdbddl "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
 	myddl "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
 	pgddl "github.com/hakadoriya/ddlctl/pkg/ddl/postgres"

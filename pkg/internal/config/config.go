@@ -8,7 +8,7 @@ import (
 	"github.com/hakadoriya/z.go/cliz"
 	"github.com/hakadoriya/z.go/errorz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 

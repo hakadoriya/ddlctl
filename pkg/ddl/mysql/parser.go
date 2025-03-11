@@ -10,7 +10,7 @@ import (
 	"github.com/hakadoriya/z.go/pathz/filepathz"
 	"github.com/hakadoriya/z.go/stringz"
 
-	apperr "github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 	"github.com/hakadoriya/ddlctl/pkg/logs"
