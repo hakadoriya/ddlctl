@@ -7,21 +7,22 @@ import (
 	"os"
 	"strings"
 
-	osz "github.com/kunitsucom/util.go/os"
+	"github.com/hakadoriya/z.go/cliz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	ddlpg "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
-	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/generate"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/show"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	ddlpg "github.com/hakadoriya/ddlctl/pkg/ddl/postgres"
+	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/generate"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/show"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
-func Command(ctx context.Context, args []string) error {
+func Command(c *cliz.Command, args []string) error {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
@@ -46,16 +47,26 @@ func Command(ctx context.Context, args []string) error {
 	return nil
 }
 
+func exists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}
+
+func isFile(path string) bool {
+	info, err := os.Stat(path)
+	return err == nil && !info.IsDir()
+}
+
 //nolint:cyclop
 func resolve(ctx context.Context, language, dialect, arg string) (ddl string, err error) {
 	switch {
-	case osz.IsFile(arg): // NOTE: expect SQL file
+	case isFile(arg): // NOTE: expect SQL file
 		ddlBytes, err := os.ReadFile(arg)
 		if err != nil {
 			return "", apperr.Errorf("os.ReadFile: %w", err)
 		}
 		ddl = string(ddlBytes)
-	case osz.Exists(arg): // NOTE: expect ddlctl generate format
+	case exists(arg): // NOTE: expect ddlctl generate format
 		b := new(strings.Builder)
 		if err := generate.Generate(ctx, b, arg, dialect, language); err != nil {
 			return "", apperr.Errorf("Generate: %w", err)

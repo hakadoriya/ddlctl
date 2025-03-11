@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 )
 
 func Test_isAlterTableAction(t *testing.T) {

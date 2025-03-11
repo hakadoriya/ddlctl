@@ -8,21 +8,20 @@ import (
 	"path/filepath"
 	"testing"
 
-	cliz "github.com/kunitsucom/util.go/exp/cli"
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	"github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/fixture"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/fixture"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
 )
 
 //nolint:paralleltest
 func TestParse(t *testing.T) {
 	t.Run("success,common.source", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -33,7 +32,7 @@ func TestParse(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -51,7 +50,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("success,info.IsDir", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -62,7 +61,7 @@ func TestParse(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -93,7 +92,7 @@ func TestParse(t *testing.T) {
 		}
 
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -105,7 +104,7 @@ func TestParse(t *testing.T) {
 		})
 		require.NoError(t, err)
 
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -120,7 +119,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("failure,os.ErrNotExist", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -131,7 +130,7 @@ func TestParse(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -148,7 +147,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("failure,parser.ParseFile", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -159,7 +158,7 @@ func TestParse(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -175,7 +174,7 @@ func TestParse(t *testing.T) {
 
 	t.Run("failure,extractDDLSource", func(t *testing.T) {
 		cmd := fixture.Cmd()
-		args, err := cmd.Parse([]string{
+		args, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -186,7 +185,7 @@ func TestParse(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)
@@ -208,7 +207,7 @@ func Test_walkDirFn(t *testing.T) {
 		t.Parallel()
 
 		cmd := fixture.Cmd()
-		_, err := cmd.Parse([]string{
+		_, err := cmd.Parse(context.Background(), []string{
 			"ddlctl",
 			"--lang=go",
 			"--dialect=spanner",
@@ -219,7 +218,7 @@ func Test_walkDirFn(t *testing.T) {
 			"dummy",
 		})
 		require.NoError(t, err)
-		ctx := cliz.WithContext(context.Background(), cmd)
+		ctx := cmd.Context()
 
 		{
 			_, err := config.Load(ctx)

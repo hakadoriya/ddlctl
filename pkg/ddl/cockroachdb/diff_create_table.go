@@ -3,12 +3,12 @@ package cockroachdb
 import (
 	"reflect"
 
-	"github.com/kunitsucom/util.go/exp/diff/simplediff"
+	simplediff "github.com/hakadoriya/z.go/diffz/simplediffz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
 )
 
 type DiffCreateTableConfig struct {

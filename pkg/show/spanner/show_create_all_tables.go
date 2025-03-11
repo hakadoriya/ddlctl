@@ -5,10 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 
-	sqlz "github.com/kunitsucom/util.go/database/sql"
+	"github.com/hakadoriya/z.go/databasez/sqlz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 // NOTE: https://cloud.google.com/spanner/docs/information-schema?hl=ja

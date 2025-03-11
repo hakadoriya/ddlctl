@@ -1,9 +1,9 @@
 package postgres
 
 import (
-	stringz "github.com/kunitsucom/util.go/strings"
+	"github.com/hakadoriya/z.go/stringz"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 const (

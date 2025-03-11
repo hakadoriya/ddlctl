@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"sync"
 
-	filepathz "github.com/kunitsucom/util.go/path/filepath"
+	"github.com/hakadoriya/z.go/pathz/filepathz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 type ddlSource struct {
@@ -54,7 +54,7 @@ func extractDDLSourceFromDDLTagGo(_ context.Context, fset *token.FileSet, f *ast
 		for _, commentGroup := range commentGroups {
 		CommentGroupLoop:
 			for _, commentLine := range commentGroup.List {
-				logs.Trace.Printf("commentLine=%s: %s", filepathz.Short(fset.Position(commentGroup.Pos()).String()), commentLine.Text)
+				logs.Trace.Printf("commentLine=%s: %s", filepathz.ExtractShortPath(fset.Position(commentGroup.Pos()).String()), commentLine.Text)
 				// NOTE: If the comment line matches the DDLTagGo, it is assumed to be a comment line for the struct.
 				if matches := DDLTagGoCommentLineRegex().FindStringSubmatch(commentLine.Text); len(matches) > _DDLTagGoCommentLineRegexContentIndex {
 					s := &ddlSource{

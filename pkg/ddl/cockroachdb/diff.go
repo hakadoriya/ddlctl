@@ -3,12 +3,12 @@ package cockroachdb
 import (
 	"reflect"
 
-	errorz "github.com/kunitsucom/util.go/errors"
-	"github.com/kunitsucom/util.go/exp/diff/simplediff"
+	"github.com/hakadoriya/z.go/diffz/simplediffz"
+	"github.com/hakadoriya/z.go/panicz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
 )
 
 //nolint:funlen,cyclop,gocognit
@@ -78,7 +78,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 				if err == nil {
 					result.Stmts = append(result.Stmts, alterStmt.Stmts...)
 				}
-				errorz.PanicOrIgnore(err, ddl.ErrNoDifference) // MEMO: If before and after table_name is match, DiffCreateTable does not return error except ddl.ErrNoDifference.
+				panicz.Panic(err, panicz.WithPanicOptionIgnoreErrors(ddl.ErrNoDifference)) // MEMO: If before and after table_name is match, DiffCreateTable does not return error except ddl.ErrNoDifference.
 				continue
 			}
 		case *CreateIndexStmt:
@@ -87,7 +87,7 @@ func Diff(before, after *DDL) (*DDL, error) {
 				if beforeStmt.StringForDiff() != afterStmt.StringForDiff() {
 					result.Stmts = append(result.Stmts,
 						&DropIndexStmt{
-							Comment: simplediff.Diff(beforeStmt.StringForDiff(), afterStmt.StringForDiff()).String(),
+							Comment: simplediffz.Diff(beforeStmt.StringForDiff(), afterStmt.StringForDiff()).String(),
 							Name:    beforeStmt.Name,
 						},
 						afterStmt,

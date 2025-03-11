@@ -3,7 +3,7 @@ package cockroachdb
 import (
 	"testing"
 
-	"github.com/kunitsucom/util.go/testing/require"
+	"github.com/hakadoriya/z.go/testingz/requirez"
 )
 
 func TestCreateIndexStmt_GetNameForDiff(t *testing.T) {
@@ -16,7 +16,7 @@ func TestCreateIndexStmt_GetNameForDiff(t *testing.T) {
 		expected := "test"
 		actual := stmt.GetNameForDiff()
 
-		require.Equal(t, expected, actual)
+		requirez.Equal(t, expected, actual)
 	})
 }
 
@@ -44,7 +44,7 @@ CREATE INDEX IF NOT EXISTS "test" ON "users" USING btree ("id" ASC);
 `
 		actual := stmt.String()
 
-		require.Equal(t, expected, actual)
+		requirez.Equal(t, expected, actual)
 
 		t.Logf("✅: %s: stmt: %#v", t.Name(), stmt)
 	})

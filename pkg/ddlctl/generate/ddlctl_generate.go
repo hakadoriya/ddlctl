@@ -6,18 +6,21 @@ import (
 	"os"
 	"path/filepath"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/mysql"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/postgres"
-	"github.com/kunitsucom/ddlctl/pkg/internal/generator/dialect/spanner"
-	ddlctlgo "github.com/kunitsucom/ddlctl/pkg/internal/lang/go"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/z.go/cliz"
+
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	crdbddl "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator/dialect/mysql"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator/dialect/postgres"
+	"github.com/hakadoriya/ddlctl/pkg/internal/generator/dialect/spanner"
+	ddlctlgo "github.com/hakadoriya/ddlctl/pkg/internal/lang/go"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
-func Command(ctx context.Context, args []string) error {
+func Command(c *cliz.Command, args []string) error {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}

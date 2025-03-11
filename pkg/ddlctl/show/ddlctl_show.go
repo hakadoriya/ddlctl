@@ -7,21 +7,23 @@ import (
 	"io"
 	"os"
 
-	sqlz "github.com/kunitsucom/util.go/database/sql"
+	"github.com/hakadoriya/z.go/cliz"
+	"github.com/hakadoriya/z.go/databasez/sqlz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	crdbddl "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	myddl "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	pgddl "github.com/kunitsucom/ddlctl/pkg/ddl/postgres"
-	spanddl "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	crdbshow "github.com/kunitsucom/ddlctl/pkg/show/cockroachdb"
-	myshow "github.com/kunitsucom/ddlctl/pkg/show/mysql"
-	pgshow "github.com/kunitsucom/ddlctl/pkg/show/postgres"
-	spanshow "github.com/kunitsucom/ddlctl/pkg/show/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	crdbddl "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	myddl "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	pgddl "github.com/hakadoriya/ddlctl/pkg/ddl/postgres"
+	spanddl "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	crdbshow "github.com/hakadoriya/ddlctl/pkg/show/cockroachdb"
+	myshow "github.com/hakadoriya/ddlctl/pkg/show/mysql"
+	pgshow "github.com/hakadoriya/ddlctl/pkg/show/postgres"
+	spanshow "github.com/hakadoriya/ddlctl/pkg/show/spanner"
 )
 
-func Command(ctx context.Context, args []string) error {
+func Command(c *cliz.Command, args []string) error {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}

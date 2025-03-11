@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"strconv"
 
-	filepathz "github.com/kunitsucom/util.go/path/filepath"
-	slicez "github.com/kunitsucom/util.go/slices"
+	"github.com/hakadoriya/z.go/pathz/filepathz"
+	"github.com/hakadoriya/z.go/slicez"
 
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
+	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
 )
 
 //nolint:cyclop,funlen,gocognit
 func fprintCreateTable(buf *string, indent string, stmt *ddlast.CreateTableStmt) {
 	// source
 	if stmt.SourceFile != "" {
-		fprintComment(buf, "", fmt.Sprintf("source: %s:%d", filepathz.Short(stmt.SourceFile), stmt.SourceLine))
+		fprintComment(buf, "", fmt.Sprintf("source: %s:%d", filepathz.ExtractShortPath(stmt.SourceFile), stmt.SourceLine))
 	}
 
 	// comments
@@ -77,7 +77,7 @@ func fprintCreateTable(buf *string, indent string, stmt *ddlast.CreateTableStmt)
 
 func fprintCreateTableColumn(buf *string, indent string, columns []*ddlast.CreateTableColumn, tailComma bool) {
 	columnNameMaxLength := 0
-	slicez.Each(columns, func(_ int, elem *ddlast.CreateTableColumn) {
+	slicez.ForEach(columns, func(_ int, elem *ddlast.CreateTableColumn) {
 		if columnLength := len(elem.ColumnName); columnLength > columnNameMaxLength {
 			columnNameMaxLength = columnLength
 		}

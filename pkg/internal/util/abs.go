@@ -3,7 +3,7 @@ package util
 import (
 	"path/filepath"
 
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 func Abs(path string) string {

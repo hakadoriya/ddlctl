@@ -1,9 +1,9 @@
 package fixture
 
 import (
-	cliz "github.com/kunitsucom/util.go/exp/cli"
+	"github.com/hakadoriya/z.go/cliz"
 
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
 )
 
 func Cmd() *cliz.Command {
@@ -11,34 +11,34 @@ func Cmd() *cliz.Command {
 		Options: []cliz.Option{
 			&cliz.StringOption{
 				Name:        consts.OptionLanguage,
-				Environment: consts.EnvKeyLanguage,
+				Env:         consts.EnvKeyLanguage,
 				Description: "programming language to generate DDL",
-				Default:     cliz.Default("go"),
+				Default:     "go",
 			},
 			&cliz.StringOption{
 				Name:        consts.OptionDialect,
-				Environment: consts.EnvKeyDialect,
+				Env:         consts.EnvKeyDialect,
 				Description: "SQL dialect to generate DDL",
-				Default:     cliz.Default(""),
+				Default:     "",
 			},
 			// Golang
 			&cliz.StringOption{
 				Name:        consts.OptionGoColumnTag,
-				Environment: consts.EnvKeyGoColumnTag,
+				Env:         consts.EnvKeyGoColumnTag,
 				Description: "column annotation key for Go struct tag",
-				Default:     cliz.Default("db"),
+				Default:     "db",
 			},
 			&cliz.StringOption{
 				Name:        consts.OptionGoDDLTag,
-				Environment: consts.EnvKeyGoDDLTag,
+				Env:         consts.EnvKeyGoDDLTag,
 				Description: "DDL annotation key for Go struct tag",
-				Default:     cliz.Default("ddlctl"),
+				Default:     "ddlctl",
 			},
 			&cliz.StringOption{
 				Name:        consts.OptionGoPKTag,
-				Environment: consts.EnvKeyGoPKTag,
+				Env:         consts.EnvKeyGoPKTag,
 				Description: "primary key annotation key for Go struct tag",
-				Default:     cliz.Default("pk"),
+				Default:     "pk",
 			},
 		},
 	}

@@ -1,11 +1,13 @@
-module github.com/kunitsucom/ddlctl
+module github.com/hakadoriya/ddlctl
 
-go 1.22.5
+go 1.23.4
+
+toolchain go1.23.5
 
 require (
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/googleapis/go-sql-spanner v1.6.0
-	github.com/kunitsucom/util.go v0.0.66
+	github.com/hakadoriya/z.go v0.0.1-0.20250309175519-1433e6247667
 	github.com/lib/pq v1.10.9
 )
 

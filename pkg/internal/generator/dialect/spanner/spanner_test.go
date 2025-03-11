@@ -7,12 +7,12 @@ import (
 	"io"
 	"testing"
 
-	testingz "github.com/kunitsucom/util.go/testing"
-	"github.com/kunitsucom/util.go/testing/assert"
-	"github.com/kunitsucom/util.go/testing/require"
+	"github.com/hakadoriya/z.go/ioz"
+	assert "github.com/hakadoriya/z.go/testingz/assertz"
+	require "github.com/hakadoriya/z.go/testingz/requirez"
 
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 //nolint:paralleltest
@@ -115,9 +115,9 @@ INTERLEAVE IN PARENT SpanParents ON DELETE CASCADE;
 			nil,
 		}
 
-		w := &testingz.Writer{WriteFunc: func(p []byte) (int, error) {
+		w := ioz.WriteFunc(func(p []byte) (int, error) {
 			return 0, io.ErrUnexpectedEOF
-		}}
+		})
 
 		backup := logs.Warn
 		t.Cleanup(func() { logs.Warn = backup })

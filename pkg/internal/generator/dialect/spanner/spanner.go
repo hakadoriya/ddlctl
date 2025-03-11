@@ -3,9 +3,9 @@ package spanner
 import (
 	"io"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	ddlast "github.com/kunitsucom/ddlctl/pkg/internal/generator"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	ddlast "github.com/hakadoriya/ddlctl/pkg/internal/generator"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 const (

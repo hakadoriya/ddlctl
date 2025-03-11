@@ -10,25 +10,26 @@ import (
 	"strings"
 	"time"
 
-	sqlz "github.com/kunitsucom/util.go/database/sql"
-	errorz "github.com/kunitsucom/util.go/errors"
-	"github.com/kunitsucom/util.go/retry"
-	stringz "github.com/kunitsucom/util.go/strings"
+	"github.com/hakadoriya/z.go/cliz"
+	"github.com/hakadoriya/z.go/databasez/sqlz"
+	"github.com/hakadoriya/z.go/errorz"
+	retry "github.com/hakadoriya/z.go/retryz"
 
-	apperr "github.com/kunitsucom/ddlctl/pkg/apperr"
-	"github.com/kunitsucom/ddlctl/pkg/ddl"
-	ddlcrdb "github.com/kunitsucom/ddlctl/pkg/ddl/cockroachdb"
-	ddlmysql "github.com/kunitsucom/ddlctl/pkg/ddl/mysql"
-	ddlspanner "github.com/kunitsucom/ddlctl/pkg/ddl/spanner"
-	"github.com/kunitsucom/ddlctl/pkg/ddlctl/diff"
-	"github.com/kunitsucom/ddlctl/pkg/internal/config"
-	"github.com/kunitsucom/ddlctl/pkg/internal/consts"
-	"github.com/kunitsucom/ddlctl/pkg/internal/util"
-	"github.com/kunitsucom/ddlctl/pkg/logs"
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
+	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
+	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
+	"github.com/hakadoriya/ddlctl/pkg/internal/config"
+	"github.com/hakadoriya/ddlctl/pkg/internal/consts"
+	"github.com/hakadoriya/ddlctl/pkg/internal/util"
+	"github.com/hakadoriya/ddlctl/pkg/logs"
 )
 
 //nolint:cyclop,funlen,gocognit,gocyclo
-func Command(ctx context.Context, args []string) (err error) {
+func Command(c *cliz.Command, args []string) (err error) {
+	ctx := c.Context()
 	if _, err := config.Load(ctx); err != nil {
 		return apperr.Errorf("config.Load: %w", err)
 	}
@@ -152,7 +153,7 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 				return apperr.Errorf("conn.ExecContext: q=%s: %w", q, err)
 			}
 		}
-		commentTrimmedDDL := stringz.ReadLine(ddlStr, "\n", stringz.ReadLineFuncRemoveCommentLine("--"))
+		commentTrimmedDDL := readLine(ddlStr, "\n", readLineFuncRemoveCommentLine("--"))
 		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
 				// skip empty query
@@ -176,6 +177,33 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 	}
 
 	return nil
+}
+
+func readLine(content string, lineSeparator string, f func(line string, lineSeparator string, lastLine bool) (treated string)) string {
+	var result string
+	lines := strings.Split(content, lineSeparator)
+	lastLine := len(lines) - 1
+	for i, line := range lines {
+		treated := f(line, lineSeparator, i == lastLine)
+		result += treated
+	}
+	return result
+}
+
+func readLineFuncRemoveCommentLine(commentPrefix string) func(line string, lineSeparator string, lastLine bool) (treated string) {
+	return func(line string, lineSeparator string, lastLine bool) (treated string) {
+		trimmed := strings.TrimSpace(line)
+
+		if lastLine && trimmed == "" {
+			return ""
+		}
+
+		if strings.HasPrefix(trimmed, commentPrefix) {
+			return ""
+		}
+
+		return line + lineSeparator
+	}
 }
 
 func prompt() error {

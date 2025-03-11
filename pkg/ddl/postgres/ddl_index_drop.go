@@ -3,7 +3,7 @@ package postgres
 import (
 	"strings"
 
-	"github.com/kunitsucom/ddlctl/pkg/ddl/internal"
+	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
 )
 
 // MEMO: https://www.cockroachlabs.com/docs/stable/drop-index
