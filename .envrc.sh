@@ -10,5 +10,5 @@ export COMPOSE_DOCKER_CLI_BUILD="1"
 # Load .env file.
 dotenv .versenv.env
 
-[ ! -e "${VERSION}" ] || touch .env
+[ -e .env ] || touch .env
 dotenv .env
