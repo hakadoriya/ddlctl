@@ -21,6 +21,7 @@ type CreateIndexStmt struct {
 	UsingPreColumns  *Using
 	Columns          []*ColumnIdent
 	UsingPostColumns *Using
+	UsingHash        bool
 }
 
 func (s *CreateIndexStmt) GetNameForDiff() string {
@@ -53,6 +54,9 @@ func (s *CreateIndexStmt) String() string {
 	if s.UsingPostColumns != nil {
 		str += " " + s.UsingPostColumns.String()
 	}
+	if s.UsingHash {
+		str += " USING HASH"
+	}
 	str += ";\n"
 	return str
 }
@@ -77,6 +81,9 @@ func (s *CreateIndexStmt) StringForDiff() string {
 	str += ")"
 	if s.UsingPostColumns != nil {
 		str += " " + s.UsingPostColumns.String()
+	}
+	if s.UsingHash {
+		str += " USING HASH"
 	}
 	str += ";\n"
 	return str

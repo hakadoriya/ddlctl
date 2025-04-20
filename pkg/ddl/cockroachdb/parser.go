@@ -265,11 +265,16 @@ func (p *Parser) parseCreateIndexStmt() (*CreateIndexStmt, error) {
 	createIndexStmt.Columns = idents
 
 	if p.isCurrentToken(TOKEN_USING) {
-		using, err := p.parseUsing()
-		if err != nil {
-			return nil, apperr.Errorf(errFmtPrefix+"parseExpr: %w", err)
+		if p.isPeekToken(TOKEN_HASH) {
+			p.nextToken() // current = HASH
+			createIndexStmt.UsingHash = true
+		} else {
+			using, err := p.parseUsing()
+			if err != nil {
+				return nil, apperr.Errorf(errFmtPrefix+"parseExpr: %w", err)
+			}
+			createIndexStmt.UsingPostColumns = using
 		}
-		createIndexStmt.UsingPostColumns = using
 		p.nextToken() // current = (
 	}
 
@@ -338,6 +343,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 			p.nextToken()
 		}
 
+		// current = PRIMARY or UNIQUE or COMMA or ...
 		cs, err := p.parseColumnConstraints(tableName, column)
 		if err != nil {
 			return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnConstraints: %w", err)
@@ -540,10 +546,18 @@ LabelConstraints:
 				return nil, apperr.Errorf("checkPeekToken: %w", err)
 			}
 			p.nextToken() // current = KEY
-			constraints = constraints.Append(&PrimaryKeyConstraint{
+			constraint := &PrimaryKeyConstraint{
 				Name:    NewRawIdent(tableName.StringForDiff() + "_pkey"),
 				Columns: []*ColumnIdent{{Ident: column.Name}},
-			})
+			}
+			if p.isPeekToken(TOKEN_USING) { //diff:ignore-line-postgres-cockroach
+				p.nextToken()                  /* current = USING */ //diff:ignore-line-postgres-cockroach
+				if p.isPeekToken(TOKEN_HASH) { //diff:ignore-line-postgres-cockroach
+					p.nextToken()               /* current = HASH */ //diff:ignore-line-postgres-cockroach
+					constraint.UsingHash = true //diff:ignore-line-postgres-cockroach
+				} //diff:ignore-line-postgres-cockroach
+			} //diff:ignore-line-postgres-cockroach
+			constraints = constraints.Append(constraint)
 		case TOKEN_REFERENCES:
 			if err := p.checkPeekToken(TOKEN_IDENT); err != nil {
 				return nil, apperr.Errorf("checkPeekToken: %w", err)
@@ -616,7 +630,7 @@ LabelConstraints:
 	return constraints, nil
 }
 
-//nolint:funlen,cyclop,gocognit
+//nolint:funlen,cyclop,gocognit,gocyclo
 func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //nolint:ireturn
 	var constraintName *Ident
 	if p.isCurrentToken(TOKEN_CONSTRAINT) {
@@ -645,10 +659,18 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		if constraintName == nil {
 			constraintName = NewRawIdent(tableName.StringForDiff() + "_pkey")
 		}
-		return &PrimaryKeyConstraint{
+		constraint := &PrimaryKeyConstraint{
 			Name:    constraintName,
 			Columns: idents,
-		}, nil
+		}
+		if p.isCurrentToken(TOKEN_USING) { //diff:ignore-line-postgres-cockroach
+			p.nextToken()                     /* current = USING */ //diff:ignore-line-postgres-cockroach
+			if p.isCurrentToken(TOKEN_HASH) { //diff:ignore-line-postgres-cockroach
+				p.nextToken()               /* current = HASH */ //diff:ignore-line-postgres-cockroach
+				constraint.UsingHash = true //diff:ignore-line-postgres-cockroach
+			} //diff:ignore-line-postgres-cockroach
+		} //diff:ignore-line-postgres-cockroach
+		return constraint, nil
 	case TOKEN_FOREIGN:
 		if err := p.checkPeekToken(TOKEN_KEY); err != nil {
 			return nil, apperr.Errorf("checkPeekToken: %w", err)
@@ -736,11 +758,16 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 		c.Name = constraintName
 		c.Columns = idents
 		if p.isCurrentToken(TOKEN_USING) {
-			using, err := p.parseUsing()
-			if err != nil {
-				return nil, apperr.Errorf("parseExpr: %w", err)
+			if p.isPeekToken(TOKEN_HASH) {
+				p.nextToken() /* current = HASH */
+				c.UsingHash = true
+			} else {
+				using, err := p.parseUsing()
+				if err != nil {
+					return nil, apperr.Errorf("parseExpr: %w", err)
+				}
+				c.UsingPostColumns = using
 			}
-			c.UsingPostColumns = using
 			p.nextToken() // current = (
 		}
 		return c, nil

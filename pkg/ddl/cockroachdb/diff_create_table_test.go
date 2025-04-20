@@ -584,4 +584,91 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
 		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
 	})
+
+	t.Run("success,ADD_PRIMARY_KEY_USING_HASH", func(t *testing.T) {
+		t.Parallel()
+
+		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, PRIMARY KEY ("id" ASC));`)).Parse()
+		require.NoError(t, err)
+
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, PRIMARY KEY ("id") USING HASH);`)).Parse()
+		require.NoError(t, err)
+
+		//nolint:forcetypeassert
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+
+		assert.NoError(t, err)
+		expected := `-- -CONSTRAINT users_pkey PRIMARY KEY ("id" ASC)
+-- +
+ALTER TABLE "users" DROP CONSTRAINT users_pkey;
+-- -
+-- +CONSTRAINT users_pkey PRIMARY KEY ("id") USING HASH
+ALTER TABLE "users" ADD CONSTRAINT users_pkey PRIMARY KEY ("id") USING HASH;
+`
+		assert.Equal(t, expected, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
+
+	t.Run("success,DROP_PRIMARY_KEY_USING_HASH", func(t *testing.T) {
+		t.Parallel()
+
+		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, PRIMARY KEY ("id" ASC) USING HASH);`)).Parse()
+		require.NoError(t, err)
+
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, PRIMARY KEY ("id" ASC));`)).Parse()
+		require.NoError(t, err)
+
+		//nolint:forcetypeassert
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+
+		assert.NoError(t, err)
+		expected := `-- -CONSTRAINT users_pkey PRIMARY KEY ("id" ASC) USING HASH
+-- +
+ALTER TABLE "users" DROP CONSTRAINT users_pkey;
+-- -
+-- +CONSTRAINT users_pkey PRIMARY KEY ("id" ASC)
+ALTER TABLE "users" ADD CONSTRAINT users_pkey PRIMARY KEY ("id" ASC);
+`
+		assert.Equal(t, expected, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
+
+	t.Run("success,ADD_INDEX_USING_HASH", func(t *testing.T) {
+		t.Parallel()
+
+		beforeDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, username VARCHAR(255) NOT NULL, PRIMARY KEY ("id" ASC));`)).Parse()
+		require.NoError(t, err)
+
+		afterDDL, err := NewParser(NewLexer(`CREATE TABLE "users" (id UUID NOT NULL, username VARCHAR(255) NOT NULL, PRIMARY KEY ("id"), INDEX users_username_idx ("username") USING HASH);`)).Parse()
+		require.NoError(t, err)
+
+		//nolint:forcetypeassert
+		actual, err := DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+
+		assert.NoError(t, err)
+		expected := `-- -
+-- +INDEX users_username_idx (username ASC) USING HASH
+CREATE INDEX users_username_idx ON "users" ("username") USING HASH;
+`
+		assert.Equal(t, expected, actual.String())
+
+		t.Logf("✅: %s: actual: %%#v: \n%#v", t.Name(), actual)
+		t.Logf("✅: %s: actual: %%s: \n%s", t.Name(), actual)
+	})
 }

@@ -404,6 +404,7 @@ func (p *Parser) parseColumn(tableName *Ident) (*Column, []Constraint, error) {
 			p.nextToken()
 		}
 
+		// current = PRIMARY or UNIQUE or COMMA or ...
 		cs, err := p.parseColumnConstraints(tableName, column)
 		if err != nil {
 			return nil, nil, apperr.Errorf(errFmtPrefix+"parseColumnConstraints: %w", err)

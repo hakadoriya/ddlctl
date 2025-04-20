@@ -70,6 +70,7 @@ const (
 	TOKEN_IF     TokenType = "IF"
 	TOKEN_EXISTS TokenType = "EXISTS"
 	TOKEN_USING  TokenType = "USING"
+	TOKEN_HASH   TokenType = "HASH"
 	TOKEN_ON     TokenType = "ON"
 	TOKEN_TO     TokenType = "TO"
 
@@ -174,6 +175,8 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_EXISTS
 	case "USING":
 		return TOKEN_USING
+	case "HASH":
+		return TOKEN_HASH
 	case "ON":
 		return TOKEN_ON
 	case "TO":

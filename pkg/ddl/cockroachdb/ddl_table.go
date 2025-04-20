@@ -43,8 +43,9 @@ func (constraints Constraints) Append(constraint Constraint) Constraints {
 
 // PrimaryKeyConstraint represents a PRIMARY KEY constraint.
 type PrimaryKeyConstraint struct {
-	Name    *Ident
-	Columns []*ColumnIdent
+	Name      *Ident
+	Columns   []*ColumnIdent
+	UsingHash bool
 }
 
 var _ Constraint = (*PrimaryKeyConstraint)(nil)
@@ -59,6 +60,9 @@ func (c *PrimaryKeyConstraint) String() string {
 	}
 	str += "PRIMARY KEY"
 	str += " (" + stringz.JoinStringers(", ", c.Columns...) + ")"
+	if c.UsingHash {
+		str += " USING HASH"
+	}
 	return str
 }
 
@@ -76,6 +80,9 @@ func (c *PrimaryKeyConstraint) StringForDiff() string {
 		str += v.StringForDiff()
 	}
 	str += ")"
+	if c.UsingHash {
+		str += " USING HASH"
+	}
 	return str
 }
 
@@ -144,6 +151,7 @@ type IndexConstraint struct { //diff:ignore-line-postgres-cockroach
 	UsingPreColumns  *Using
 	Columns          []*ColumnIdent
 	UsingPostColumns *Using
+	UsingHash        bool
 }
 
 var _ Constraint = (*IndexConstraint)(nil) //diff:ignore-line-postgres-cockroach
@@ -158,13 +166,16 @@ func (c *IndexConstraint) String() string { //diff:ignore-line-postgres-cockroac
 	} //diff:ignore-line-postgres-cockroach
 	if c.Name != nil { //diff:ignore-line-postgres-cockroach
 		str += "INDEX " + c.Name.String() + " " //diff:ignore-line-postgres-cockroach
-	}
+	} //diff:ignore-line-postgres-cockroach
 	if c.UsingPreColumns != nil {
 		str += " " + c.UsingPreColumns.String()
 	}
 	str += "(" + stringz.JoinStringers(", ", c.Columns...) + ")"
 	if c.UsingPostColumns != nil {
 		str += " " + c.UsingPostColumns.String()
+	}
+	if c.UsingHash {
+		str += " USING HASH"
 	}
 	return str
 }
@@ -190,6 +201,9 @@ func (c *IndexConstraint) StringForDiff() string { //diff:ignore-line-postgres-c
 	str += ")"
 	if c.UsingPostColumns != nil {
 		str += " " + c.UsingPostColumns.String()
+	}
+	if c.UsingHash {
+		str += " USING HASH"
 	}
 	return str
 }

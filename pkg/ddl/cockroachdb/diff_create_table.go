@@ -105,9 +105,9 @@ func DiffCreateTable(before, after *CreateTableStmt, opts ...DiffCreateTableOpti
 			if beforeConstraint.StringForDiff() != afterConstraint.StringForDiff() {
 				switch ac := afterConstraint.(type) { //diff:ignore-line-postgres-cockroach
 				case *IndexConstraint: //diff:ignore-line-postgres-cockroach
-					// DROP INDEX index_name;                               //diff:ignore-line-postgres-cockroach
-					// CREATE INDEX index_name ON table_name (column_name); //diff:ignore-line-postgres-cockroach
-					result.Stmts = append( //diff:ignore-line-postgres-cockroach
+					/* DROP INDEX index_name;  */ //diff:ignore-line-postgres-cockroach
+					/* CREATE INDEX index_name ON table_name (column_name); */ //diff:ignore-line-postgres-cockroach
+					result.Stmts = append(                                     //diff:ignore-line-postgres-cockroach
 						result.Stmts, //diff:ignore-line-postgres-cockroach
 						&DropIndexStmt{ //diff:ignore-line-postgres-cockroach
 							Comment: simplediff.Diff(beforeConstraint.String(), afterConstraint.String()).String(), //diff:ignore-line-postgres-cockroach
