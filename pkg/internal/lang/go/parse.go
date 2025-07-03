@@ -27,7 +27,7 @@ import (
 
 const (
 	Language                                = "go"
-	DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND = "DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND" //nolint:revive,stylecheck
+	DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND = "DDLCTL_ERROR_STRUCT_FIELD_TAG_NOT_FOUND" //nolint:revive
 )
 
 //nolint:cyclop

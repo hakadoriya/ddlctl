@@ -1,60 +1,96 @@
+version: "2"
 run:
   modules-download-mode: readonly
   allow-parallel-runners: true
-
-# https://golangci-lint.run/usage/linters/
 linters:
-  enable-all: true
+  default: all
   disable:
     - depguard # unnecessary
     - dupl # disable to avoid encouraging excessive DRY
     - exhaustruct # https://github.com/GaijinEntertainment/go-exhaustruct
-    - gci # unnecessary
+    - funcorder # unnecessary
     - goconst # unnecessary
     - godox # unnecessary
-    - gomnd # https://github.com/tommy-muehle/go-mnd
     - gosmopolitan # unnecessary
     - interfacebloat # unnecessary
     - lll # unnecessary
+    - mnd # unnecessary
     - nlreturn # ignore "return with no blank line before"
+    - noinlineerr # unnecessary
     - nolintlint # unnecessary
     - nonamedreturns # unnecessary
     - varnamelen # unnecessary
     - wsl # ignore "declarations should never be cuddled"
-
-linters-settings:
-  godot:
-    period: false
-  goimports:
-    local-prefixes: "github.com/hakadoriya/ddlctl"
-  wrapcheck:
-    ignoreSigs:
-      - func errors.New(text string) error
-      - func fmt.Errorf(format string, a ...any) error
-      - func fmt.Errorf(format string, a ...interface{}) error
-      - func github.com/hakadoriya/z.go/apperr.Errorf(format string, a ...interface{}) error
-      - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...any) error
-      - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...interface{}) error
-
-
-issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - containedctx
-        - cyclop
-        - dupl
-        - funlen
-        - gochecknoglobals
-        - gocognit
-        - goconst
-        - gocyclo
-        - goerr113
-        - gosec
-        - ireturn
-        - maintidx
-        - noctx
-        - revive
-        - testpackage
-        - varnamelen
-        - wrapcheck
+    - wsl_v5 # unnecessary
+  settings:
+    godot:
+      period: false
+    wrapcheck:
+      ignore-sigs:
+        - func errors.New(text string) error
+        - func fmt.Errorf(format string, a ...any) error
+        - func fmt.Errorf(format string, a ...interface{}) error
+        - func github.com/hakadoriya/z.go/apperr.Errorf(format string, a ...interface{}) error
+        - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...any) error
+        - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...interface{}) error
+  exclusions:
+    generated: lax
+    presets:
+      - comments
+      - common-false-positives
+      - legacy
+      - std-error-handling
+    rules:
+      - linters:
+          - containedctx
+          - cyclop
+          - dupl
+          - err113
+          - funlen
+          - gochecknoglobals
+          - gocognit
+          - goconst
+          - gocyclo
+          - gosec
+          - ireturn
+          - maintidx
+          - noctx
+          - revive
+          - testpackage
+          - varnamelen
+          - wrapcheck
+        path: _test\.go
+      - # NOTE: ignore meaningless package names
+        path: .+\.go
+        text: "var-naming: avoid meaningless package names"
+        linters:
+          - revive
+      - # NOTE: ignore underscore in package name
+        path: .+\.go
+        text: "var-naming: don't use an underscore in package name"
+        linters:
+          - revive
+      - # NOTE: ignore redundant return statement
+        path: .+\.go
+        text: "S1023: redundant return statement"
+        linters:
+          - staticcheck
+    paths:
+      - third_party$
+      - builtin$
+      - examples$
+formatters:
+  enable:
+    - gofmt
+    - gofumpt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes:
+        - github.com/hakadoriya/ddlctl
+  exclusions:
+    generated: lax
+    paths:
+      - third_party$
+      - builtin$
+      - examples$

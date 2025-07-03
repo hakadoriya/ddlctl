@@ -43,9 +43,9 @@ type DefaultLogger struct {
 	*log.Logger
 }
 
-func (l *DefaultLogger) Print(v ...interface{}) { _ = l.Logger.Output(callerSkip, fmt.Sprint(v...)) }
+func (l *DefaultLogger) Print(v ...interface{}) { _ = l.Output(callerSkip, fmt.Sprint(v...)) }
 func (l *DefaultLogger) Printf(format string, v ...interface{}) {
-	_ = l.Logger.Output(callerSkip, fmt.Sprintf(format, v...))
+	_ = l.Output(callerSkip, fmt.Sprintf(format, v...))
 }
 
 func (l *DefaultLogger) Write(p []byte) (n int, err error) {
@@ -57,7 +57,7 @@ func (l *DefaultLogger) LineWriter(prefix string) io.Writer {
 	return ioz.WriteFunc(func(p []byte) (n int, err error) {
 		lines := bytes.Split(p, []byte("\n"))
 		for _, line := range lines {
-			_ = l.Logger.Output(1, prefix+string(line))
+			_ = l.Output(1, prefix+string(line))
 		}
 
 		return len(p), nil

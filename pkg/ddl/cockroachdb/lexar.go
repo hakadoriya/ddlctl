@@ -30,7 +30,7 @@ func (t TokenType) String() string {
 	return string(t)
 }
 
-//nolint:revive,stylecheck
+//nolint:revive
 const (
 	// SPECIAL TOKENS.
 	TOKEN_ILLEGAL TokenType = "ILLEGAL"
