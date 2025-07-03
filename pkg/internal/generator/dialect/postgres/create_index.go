@@ -25,5 +25,5 @@ func fprintCreateIndex(buf *string, _ string, stmt *ddlast.CreateIndexStmt) {
 
 	*buf += ";\n"
 
-	return //nolint:gosimple
+	return
 }

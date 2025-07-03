@@ -9,7 +9,7 @@ import (
 func GoString(v interface{}) string {
 	typ := reflect.TypeOf(v)
 	if typ.Kind() != reflect.Struct {
-		panic(fmt.Errorf("kind=%s expected=%s", typ.Kind(), reflect.Struct)) //nolint:goerr113
+		panic(fmt.Errorf("kind=%s expected=%s", typ.Kind(), reflect.Struct)) //nolint:err113
 	}
 
 	val := reflect.ValueOf(v)

@@ -73,7 +73,7 @@ Enter a value: `
 	}
 
 	if config.AutoApprove() {
-		if _, err := os.Stdout.WriteString(fmt.Sprintf("yes (via --%s option)\n", consts.OptionAutoApprove)); err != nil {
+		if _, err := fmt.Fprintf(os.Stdout, "yes (via --%s option)\n", consts.OptionAutoApprove); err != nil {
 			return apperr.Errorf("os.Stdout.WriteString: %w", err)
 		}
 	} else {

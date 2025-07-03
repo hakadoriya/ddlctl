@@ -39,7 +39,7 @@ func Command(c *cliz.Command, args []string) error {
 		dst = filepath.Join(dst, "ddlctl.gen.sql")
 	}
 
-	const rw_r__r__ = 0o644 //nolint:revive,stylecheck
+	const rw_r__r__ = 0o644 //nolint:revive
 	dstFile, err := os.OpenFile(dst, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, rw_r__r__)
 	if err != nil {
 		return apperr.Errorf("os.OpenFile: %w", err)

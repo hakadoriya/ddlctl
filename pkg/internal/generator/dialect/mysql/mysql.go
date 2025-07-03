@@ -47,5 +47,5 @@ func fprintComment(buf *string, indent string, comment string) {
 	}
 
 	*buf += indent + CommentPrefix + " " + comment + "\n"
-	return //nolint:gosimple
+	return
 }

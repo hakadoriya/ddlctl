@@ -70,7 +70,7 @@ func fprintCreateTable(buf *string, indent string, stmt *ddlast.CreateTableStmt)
 		*buf += ";\n"
 	}
 
-	return //nolint:gosimple
+	return
 }
 
 func fprintCreateTableColumn(buf *string, indent string, columns []*ddlast.CreateTableColumn, tailComma bool) {
@@ -97,7 +97,7 @@ func fprintCreateTableColumn(buf *string, indent string, columns []*ddlast.Creat
 		}
 	}
 
-	return //nolint:gosimple
+	return
 }
 
 func fprintCreateTableConstraint(buf *string, indent string, constraint *ddlast.CreateTableConstraint) {
@@ -107,7 +107,7 @@ func fprintCreateTableConstraint(buf *string, indent string, constraint *ddlast.
 
 	*buf += indent + constraint.Constraint
 
-	return //nolint:gosimple
+	return
 }
 
 func fprintCreateTableOption(buf *string, indent string, option *ddlast.CreateTableOption) {
@@ -117,5 +117,5 @@ func fprintCreateTableOption(buf *string, indent string, option *ddlast.CreateTa
 
 	*buf += indent + option.Option
 
-	return //nolint:gosimple
+	return
 }
