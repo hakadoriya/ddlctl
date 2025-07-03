@@ -56,7 +56,7 @@ lint:  ## Run gitleaks, go mod tidy, golangci-lint
 	git diff --exit-code go.mod go.sum
 	# lint
 	# ref. https://golangci-lint.run/usage/linters/
-	golangci-lint run --fix --sort-results
+	golangci-lint run --fix
 	git diff --exit-code
 
 .PHONY: credits
