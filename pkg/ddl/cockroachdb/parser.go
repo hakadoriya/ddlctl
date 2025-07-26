@@ -892,8 +892,8 @@ func isDataType(tokenType TokenType) bool {
 		TOKEN_FLOAT4, TOKEN_FLOAT8,
 		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
 		TOKEN_UUID, TOKEN_JSONB,
-		TOKEN_CHARACTER, TOKEN_VARYING,
-		TOKEN_VARCHAR, TOKEN_STRING, //diff:ignore-line-postgres-cockroach
+		TOKEN_CHARACTER, TOKEN_VARYING, TOKEN_VARCHAR,
+		TOKEN_STRING, //diff:ignore-line-postgres-cockroach
 		TOKEN_TIMESTAMP, TOKEN_TIMESTAMPTZ:
 		return true
 	default:

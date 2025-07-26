@@ -670,7 +670,10 @@ func (p *Parser) parseDataType() (*DataType, error) {
 		}
 		p.nextToken() // current = VARYING
 		dataType.Name += " " + p.currentToken.Literal.String()
-		dataType.Type = TOKEN_CHARACTER_VARYING //diff:ignore-line-postgres-cockroach
+		dataType.Type = TOKEN_CHARACTER_VARYING
+	case TOKEN_VARCHAR: //diff:ignore-line-postgres-cockroach
+		dataType.Name = p.currentToken.Literal.String() //diff:ignore-line-postgres-cockroach
+		dataType.Type = TOKEN_CHARACTER_VARYING         //diff:ignore-line-postgres-cockroach
 	default:
 		dataType.Name = p.currentToken.Literal.String()
 		dataType.Type = p.currentToken.Type
@@ -762,9 +765,10 @@ func isDataType(tokenType TokenType) bool {
 		TOKEN_SMALLINT, TOKEN_INTEGER, TOKEN_BIGINT, //diff:ignore-line-postgres-cockroach
 		TOKEN_DECIMAL, TOKEN_NUMERIC,
 		TOKEN_REAL, TOKEN_DOUBLE, /* TOKEN_PRECISION, */
+		TOKEN_FLOAT4, TOKEN_FLOAT8,
 		TOKEN_SMALLSERIAL, TOKEN_SERIAL, TOKEN_BIGSERIAL,
 		TOKEN_UUID, TOKEN_JSONB,
-		TOKEN_CHARACTER, TOKEN_VARYING,
+		TOKEN_CHARACTER, TOKEN_VARYING, TOKEN_VARCHAR,
 		TOKEN_TEXT, //diff:ignore-line-postgres-cockroach
 		TOKEN_TIMESTAMP, TOKEN_TIMESTAMPTZ:
 		return true
