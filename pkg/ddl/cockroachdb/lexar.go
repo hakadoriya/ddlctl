@@ -94,8 +94,8 @@ const (
 	TOKEN_CHARACTER_VARYING TokenType = "CHARACTER VARYING"
 	TOKEN_CHARACTER         TokenType = "CHARACTER"
 	TOKEN_VARYING           TokenType = "VARYING"
-	TOKEN_VARCHAR           TokenType = "VARCHAR" //diff:ignore-line-postgres-cockroach
-	TOKEN_STRING            TokenType = "STRING"  //diff:ignore-line-postgres-cockroach
+	TOKEN_VARCHAR           TokenType = "VARCHAR"
+	TOKEN_STRING            TokenType = "STRING" //diff:ignore-line-postgres-cockroach
 	TOKEN_TIMESTAMPTZ       TokenType = "TIMESTAMPTZ"
 	TOKEN_TIMESTAMP         TokenType = "TIMESTAMP"
 	TOKEN_WITH              TokenType = "WITH"
@@ -178,7 +178,7 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_ON
 	case "TO":
 		return TOKEN_TO
-	case "BOOLEAN", "BOOL": //diff:ignore-line-postgres-cockroach
+	case "BOOLEAN", "BOOL":
 		return TOKEN_BOOL //diff:ignore-line-postgres-cockroach
 	case "INT2", "SMALLINT": //diff:ignore-line-postgres-cockroach
 		return TOKEN_INT2 //diff:ignore-line-postgres-cockroach
@@ -212,10 +212,10 @@ func lookupIdent(ident string) TokenType {
 		return TOKEN_JSONB
 	case "CHARACTER":
 		return TOKEN_CHARACTER
-	case "VARYING": //diff:ignore-line-postgres-cockroach
+	case "VARYING":
 		return TOKEN_VARYING
-	case "VARCHAR": //diff:ignore-line-postgres-cockroach
-		return TOKEN_VARCHAR //diff:ignore-line-postgres-cockroach
+	case "VARCHAR":
+		return TOKEN_VARCHAR
 	case "TEXT", "STRING": //diff:ignore-line-postgres-cockroach
 		return TOKEN_STRING //diff:ignore-line-postgres-cockroach
 	case "TIMESTAMP":

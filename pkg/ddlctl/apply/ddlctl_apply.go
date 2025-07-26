@@ -19,6 +19,7 @@ import (
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 	ddlcrdb "github.com/hakadoriya/ddlctl/pkg/ddl/cockroachdb"
 	ddlmysql "github.com/hakadoriya/ddlctl/pkg/ddl/mysql"
+	ddlpostgres "github.com/hakadoriya/ddlctl/pkg/ddl/postgres"
 	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
 	"github.com/hakadoriya/ddlctl/pkg/ddlctl/diff"
 	"github.com/hakadoriya/ddlctl/pkg/internal/config"
@@ -99,6 +100,8 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 		switch dialect {
 		case ddlcrdb.Dialect:
 			return ddlcrdb.DriverName
+		case ddlpostgres.Dialect:
+			return ddlpostgres.DriverName
 		default:
 			return dialect
 		}
@@ -114,8 +117,18 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 		}
 	}()
 
-	switch driverName {
-	case ddlmysql.DriverName:
+	switch dialect {
+	case ddlcrdb.Dialect:
+		if err := splitExec(
+			ctx,
+			db,
+			ddlStr,
+			func(err error) bool { return errorz.Contains(err, "already exists") },
+			func(_ error) bool { return false }, // TODO: handle error
+		); err != nil {
+			return apperr.Errorf("splitExec: %w", err)
+		}
+	case ddlmysql.Dialect:
 		if err := splitExec(
 			ctx,
 			db,
@@ -127,17 +140,17 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 		); err != nil {
 			return apperr.Errorf("splitExec: %w", err)
 		}
-	case ddlcrdb.DriverName:
+	case ddlpostgres.Dialect:
 		if err := splitExec(
 			ctx,
 			db,
 			ddlStr,
-			func(_ error) bool { return false }, // TODO: handle error
+			func(err error) bool { return errorz.Contains(err, "already exists") },
 			func(_ error) bool { return false }, // TODO: handle error
 		); err != nil {
 			return apperr.Errorf("splitExec: %w", err)
 		}
-	case ddlspanner.DriverName:
+	case ddlspanner.Dialect:
 		conn, err := db.Conn(ctx)
 		if err != nil {
 			return apperr.Errorf("db.Conn: %w", err)
