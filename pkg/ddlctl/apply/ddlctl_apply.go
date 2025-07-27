@@ -145,7 +145,9 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 			ctx,
 			db,
 			ddlStr,
-			func(err error) bool { return errorz.Contains(err, "already exists") },
+			func(err error) bool {
+				return errorz.Contains(err, "already exists") || errorz.Contains(err, "does not exist")
+			},
 			func(_ error) bool { return false }, // TODO: handle error
 		); err != nil {
 			return apperr.Errorf("splitExec: %w", err)
