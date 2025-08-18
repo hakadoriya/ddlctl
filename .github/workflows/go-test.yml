@@ -69,7 +69,7 @@ jobs:
     needs: paths-ignore
     if: ${{ needs.paths-ignore.outputs.skip != 'true' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: DEBUG
         shell: bash
         run: |
