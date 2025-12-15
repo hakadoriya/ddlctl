@@ -57,7 +57,7 @@ jobs:
           ================================================================
           DEBUG_DOC
       - name: actions/cache for versenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/versenv
@@ -93,7 +93,7 @@ jobs:
           echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
           echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
       - name: actions/cache for go
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod
