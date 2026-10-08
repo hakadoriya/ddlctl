@@ -229,12 +229,15 @@ func (config *DiffCreateTableConfig) diffCreateTableColumn(ddls *DDL, before, af
 
 		switch {
 		case beforeColumn.Options != nil && afterColumn.Options == nil:
-			// ALTER TABLE table_name ALTER COLUMN column_name DROP OPTIONS;
+			// ALTER TABLE table_name ALTER COLUMN column_name SET OPTIONS (option_name = NULL, ...);
+			// NOTE: Cloud Spanner has no DROP OPTIONS syntax, so the options the column currently has
+			//       are passed along and each of them is reset to NULL.
 			ddls.Stmts = append(ddls.Stmts, &AlterTableStmt{
 				Comment: simplediff.Diff(beforeColumn.String(), afterColumn.String()).String(),
 				Name:    after.Name,
 				Action: &AlterColumnDropOptions{
-					Name: afterColumn.Name,
+					Name:    afterColumn.Name,
+					Options: beforeColumn.Options,
 				},
 			})
 		case afterColumn.Options != nil && beforeColumn.Options.StringForDiff() != afterColumn.Options.StringForDiff():
