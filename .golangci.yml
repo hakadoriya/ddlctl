@@ -33,6 +33,9 @@ linters:
         - func github.com/hakadoriya/z.go/apperr.Errorf(format string, a ...interface{}) error
         - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...any) error
         - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...interface{}) error
+        # NOTE: apperr.Errorf is an alias of fmt.Errorf, whose signature now uses a named return value.
+        - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...any) (err error)
+        - var github.com/hakadoriya/ddlctl/pkg/apperr.Errorf func(format string, a ...interface{}) (err error)
   exclusions:
     generated: lax
     presets:
