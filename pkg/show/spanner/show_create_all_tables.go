@@ -72,6 +72,32 @@ func (c *informationSchemaColumnOption) String() string {
 }
 
 const (
+	// columnOptionNameLocalityGroup is the column option that Cloud Spanner implicitly
+	// assigns to every column.
+	//
+	// ref. https://cloud.google.com/spanner/docs/reference/standard-sql/data-definition-language#column_options
+	columnOptionNameLocalityGroup = "locality_group"
+
+	// columnOptionValueDefaultLocalityGroup is the value Cloud Spanner assigns when no
+	// locality group is explicitly specified.
+	columnOptionValueDefaultLocalityGroup = "default"
+)
+
+// isImplicitlyAssigned reports whether the column option is implicitly assigned by Cloud Spanner
+// rather than explicitly specified by the user.
+//
+// Cloud Spanner exposes `locality_group = default` in INFORMATION_SCHEMA.COLUMN_OPTIONS for every
+// column even when the user has never specified a locality group. Including it in the DDL that
+// represents the current schema makes ddlctl report a diff against DDL that has no OPTIONS clause,
+// and the generated `ALTER COLUMN ... DROP OPTIONS` fails because Cloud Spanner has no such syntax.
+//
+// Only the implicit default is skipped; an explicitly specified locality group is still reported
+// so that changes to it are detected.
+func (c *informationSchemaColumnOption) isImplicitlyAssigned() bool {
+	return c.OptionName == columnOptionNameLocalityGroup && c.OptionValue == columnOptionValueDefaultLocalityGroup
+}
+
+const (
 	queryShowPrimaryKey = `-- SHOW TABLES
 SELECT
     i.INDEX_NAME,
@@ -203,7 +229,8 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			if len(allColumnOptions) > 0 {
 				columnOptions := make([]*informationSchemaColumnOption, 0)
 				for _, opt := range allColumnOptions {
-					if col.ColumnName == opt.ColumnName {
+					// NOTE: Skip options that Cloud Spanner assigns implicitly. See isImplicitlyAssigned.
+					if col.ColumnName == opt.ColumnName && !opt.isImplicitlyAssigned() {
 						columnOptions = append(columnOptions, opt)
 					}
 				}
