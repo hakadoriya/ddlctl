@@ -663,12 +663,13 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil {
-			name := tableName.StringForDiff()
+			var name strings.Builder
+			name.WriteString(tableName.StringForDiff())
 			for _, ident := range idents {
-				name += "_" + ident.StringForDiff()
+				name.WriteString("_" + ident.StringForDiff())
 			}
-			name += "_fkey"
-			constraintName = NewRawIdent(name)
+			name.WriteString("_fkey")
+			constraintName = NewRawIdent(name.String())
 		}
 		return &ForeignKeyConstraint{
 			Name:       constraintName,

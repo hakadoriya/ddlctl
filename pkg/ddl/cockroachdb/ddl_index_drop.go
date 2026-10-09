@@ -21,21 +21,21 @@ func (s *DropIndexStmt) GetNameForDiff() string {
 }
 
 func (s *DropIndexStmt) String() string {
-	var str string
+	var str strings.Builder
 	if s.Comment != "" {
 		comments := strings.Split(s.Comment, "\n")
 		for i := range comments {
 			if comments[i] != "" {
-				str += CommentPrefix + comments[i] + "\n"
+				str.WriteString(CommentPrefix + comments[i] + "\n")
 			}
 		}
 	}
-	str += "DROP INDEX "
+	str.WriteString("DROP INDEX ")
 	if s.IfExists {
-		str += "IF EXISTS "
+		str.WriteString("IF EXISTS ")
 	}
-	str += s.Name.String() + ";\n"
-	return str
+	str.WriteString(s.Name.String() + ";\n")
+	return str.String()
 }
 
 func (*DropIndexStmt) isStmt()            {}

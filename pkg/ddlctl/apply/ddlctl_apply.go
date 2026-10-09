@@ -195,14 +195,14 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 }
 
 func readLine(content string, lineSeparator string, f func(line string, lineSeparator string, lastLine bool) (treated string)) string {
-	var result string
+	var result strings.Builder
 	lines := strings.Split(content, lineSeparator)
 	lastLine := len(lines) - 1
 	for i, line := range lines {
 		treated := f(line, lineSeparator, i == lastLine)
-		result += treated
+		result.WriteString(treated)
 	}
-	return result
+	return result.String()
 }
 
 func readLineFuncRemoveCommentLine(commentPrefix string) func(line string, lineSeparator string, lastLine bool) (treated string) {

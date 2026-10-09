@@ -26,50 +26,50 @@ func (s *CreateTableStmt) GetNameForDiff() string {
 
 //nolint:cyclop
 func (s *CreateTableStmt) String() string {
-	var str string
+	var str strings.Builder
 	if s.Comment != "" {
 		comments := strings.Split(s.Comment, "\n")
 		for i := range comments {
 			if comments[i] != "" {
-				str += CommentPrefix + comments[i] + "\n"
+				str.WriteString(CommentPrefix + comments[i] + "\n")
 			}
 		}
 	}
-	str += "CREATE TABLE "
+	str.WriteString("CREATE TABLE ")
 	if s.IfNotExists {
-		str += "IF NOT EXISTS "
+		str.WriteString("IF NOT EXISTS ")
 	}
-	str += s.Name.String() + " (\n"
+	str.WriteString(s.Name.String() + " (\n")
 	lastIndex := len(s.Columns) - 1
 	hasConstraint := len(s.Constraints) > 0
 	for i, v := range s.Columns {
-		str += Indent
-		str += v.String()
+		str.WriteString(Indent)
+		str.WriteString(v.String())
 		if i != lastIndex || hasConstraint {
-			str += ",\n"
+			str.WriteString(",\n")
 		} else {
-			str += "\n"
+			str.WriteString("\n")
 		}
 	}
 	if len(s.Constraints) > 0 {
 		lastConstraint := len(s.Constraints) - 1
 		for i, v := range s.Constraints {
-			str += Indent
-			str += v.String()
+			str.WriteString(Indent)
+			str.WriteString(v.String())
 			if i != lastConstraint {
-				str += ",\n"
+				str.WriteString(",\n")
 			} else {
-				str += "\n"
+				str.WriteString("\n")
 			}
 		}
 	}
-	str += ")"
+	str.WriteString(")")
 	if len(s.Options) > 0 {
-		str += " " + s.Options.String()
+		str.WriteString(" " + s.Options.String())
 	}
 
-	str += ";\n"
-	return str
+	str.WriteString(";\n")
+	return str.String()
 }
 
 func (*CreateTableStmt) isStmt()            {}

@@ -589,12 +589,13 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			}
 		}
 		if constraintName == nil {
-			name := tableName.StringForDiff()
+			var name strings.Builder
+			name.WriteString(tableName.StringForDiff())
 			for _, ident := range idents {
-				name += "_" + ident.StringForDiff()
+				name.WriteString("_" + ident.StringForDiff())
 			}
-			name += "_fkey"
-			constraintName = NewRawIdent(name)
+			name.WriteString("_fkey")
+			constraintName = NewRawIdent(name.String())
 		}
 		return &ForeignKeyConstraint{
 			Name:       constraintName,
@@ -615,11 +616,12 @@ func (p *Parser) parseTableConstraint(tableName *Ident) (Constraint, error) { //
 			return nil, apperr.Errorf("parseColumnIdents: %w", err)
 		}
 		if constraintName == nil { //diff:ignore-line-postgres-cockroach
-			name := tableName.StringForDiff() + "_unique" //diff:ignore-line-postgres-cockroach
-			for _, ident := range idents {                //diff:ignore-line-postgres-cockroach
-				name += "_" + ident.StringForDiff() //diff:ignore-line-postgres-cockroach
+			var name strings.Builder                                //diff:ignore-line-postgres-cockroach
+			name.WriteString(tableName.StringForDiff() + "_unique") //diff:ignore-line-postgres-cockroach
+			for _, ident := range idents {                          //diff:ignore-line-postgres-cockroach
+				name.WriteString("_" + ident.StringForDiff()) //diff:ignore-line-postgres-cockroach
 			} //diff:ignore-line-postgres-cockroach
-			constraintName = NewRawIdent(name) //diff:ignore-line-postgres-cockroach
+			constraintName = NewRawIdent(name.String()) //diff:ignore-line-postgres-cockroach
 		} //diff:ignore-line-postgres-cockroach
 		c.Name = constraintName
 		c.Columns = idents
