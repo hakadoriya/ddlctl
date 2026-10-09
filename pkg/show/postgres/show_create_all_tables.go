@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
@@ -125,7 +126,7 @@ func WithShowCreateAllTablesOptionSchema(schema string) ShowCreateAllTablesOptio
 	return &showCreateAllTablesOptionSchema{schema: schema}
 }
 
-func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (query string, err error) {
+func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (string, error) {
 	dbz := sqlz.NewDB(db)
 
 	cfg := &showCreateAllTablesConfig{
@@ -143,8 +144,9 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 	if err := dbz.QueryContext(ctx, createTableStmts, fmt.Sprintf(formatShowCreateAllTables, cfg.schema)); err != nil {
 		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
+	var query strings.Builder
 	for _, stmt := range *createTableStmts {
-		query += stmt.CreateStatement + "\n"
+		query.WriteString(stmt.CreateStatement + "\n")
 	}
 
 	createIndexStmts := new([]*CreateStatement)
@@ -152,8 +154,8 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
 	for _, stmt := range *createIndexStmts {
-		query += stmt.CreateStatement + ";\n"
+		query.WriteString(stmt.CreateStatement + ";\n")
 	}
 
-	return query, nil
+	return query.String(), nil
 }

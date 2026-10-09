@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
@@ -193,7 +194,7 @@ func WithShowCreateAllTablesOptionSchema(schema string) ShowCreateAllTablesOptio
 }
 
 //nolint:cyclop,funlen,gocognit
-func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (query string, err error) {
+func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (string, error) {
 	dbz := sqlz.NewDB(db)
 
 	cfg := &showCreateAllTablesConfig{
@@ -208,10 +209,11 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
 
+	var query strings.Builder
 	tablesLastIndex := len(tables) - 1
 	for tblIdx, tbl := range tables {
 		// TABLE
-		d := fmt.Sprintf("CREATE TABLE %s (\n", tbl.TableName)
+		fmt.Fprintf(&query, "CREATE TABLE %s (\n", tbl.TableName)
 
 		columns := make([]*informationSchemaColumn, 0)
 		if err := dbz.QueryContext(ctx, &columns, queryShowCreateAllTables, tbl.TableName); err != nil {
@@ -225,7 +227,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 
 		columnsLastIndex := len(columns) - 1
 		for colIdx, col := range columns {
-			d += fmt.Sprintf("    %s", col)
+			fmt.Fprintf(&query, "    %s", col)
 			if len(allColumnOptions) > 0 {
 				columnOptions := make([]*informationSchemaColumnOption, 0)
 				for _, opt := range allColumnOptions {
@@ -235,24 +237,24 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 					}
 				}
 				if len(columnOptions) > 0 {
-					d += " OPTIONS ("
+					query.WriteString(" OPTIONS (")
 					for columnOptionsIdx, opt := range columnOptions {
-						d += opt.String()
+						query.WriteString(opt.String())
 						if columnOptionsLastIndex := len(columnOptions) - 1; columnOptionsIdx != columnOptionsLastIndex {
-							d += ", "
+							query.WriteString(", ")
 						}
 					}
-					d += ")"
+					query.WriteString(")")
 				}
 			}
 			if colIdx != columnsLastIndex {
-				d += ","
+				query.WriteString(",")
 			}
-			d += "\n"
+			query.WriteString("\n")
 
 			logs.Trace.Printf("table=%s: columns: %s", tbl.TableName, col)
 		}
-		d += ")"
+		query.WriteString(")")
 
 		primaryKeyColumns := make([]*informationSchemaPrimaryKey, 0)
 		if err := dbz.QueryContext(ctx, &primaryKeyColumns, queryShowPrimaryKey, tbl.TableName); err != nil {
@@ -260,15 +262,15 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		}
 
 		if len(primaryKeyColumns) > 0 {
-			d += " PRIMARY KEY ("
+			query.WriteString(" PRIMARY KEY (")
 			primaryKeyColumnsLastIndex := len(primaryKeyColumns) - 1
 			for i, pk := range primaryKeyColumns {
-				d += pk.ColumnName
+				query.WriteString(pk.ColumnName)
 				if i != primaryKeyColumnsLastIndex {
-					d += ", "
+					query.WriteString(", ")
 				}
 			}
-			d += ")"
+			query.WriteString(")")
 		}
 
 		tableOptionRowDeletionPolicy := make([]*informationSchemaTableOptionRowDeletionPolicy, 0)
@@ -277,15 +279,14 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		}
 
 		if len(tableOptionRowDeletionPolicy) > 0 {
-			d += ",\nROW DELETION POLICY ("
+			query.WriteString(",\nROW DELETION POLICY (")
 			for _, opt := range tableOptionRowDeletionPolicy {
-				d += opt.RowDeletionPolicyExpression
+				query.WriteString(opt.RowDeletionPolicyExpression)
 			}
-			d += ")"
+			query.WriteString(")")
 		}
 
-		// append table
-		query += d + ";\n"
+		query.WriteString(";\n")
 
 		// INDEX
 		indexNames := make([]*informationSchemaIndexName, 0)
@@ -299,29 +300,26 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 				return "", apperr.Errorf("dbz.QueryContext: %w", err)
 			}
 
-			d := "CREATE "
+			query.WriteString("CREATE ")
 			if indexName.IsUnique {
-				d += "UNIQUE "
+				query.WriteString("UNIQUE ")
 			}
-			d += fmt.Sprintf("INDEX %s ON %s (", indexName.IndexName, tbl.TableName)
+			fmt.Fprintf(&query, "INDEX %s ON %s (", indexName.IndexName, tbl.TableName)
 
 			indexesLastIndex := len(indexes) - 1
 			for i, idx := range indexes {
-				d += idx.ColumnName
+				query.WriteString(idx.ColumnName)
 				if i != indexesLastIndex {
-					d += ", "
+					query.WriteString(", ")
 				}
 			}
-			d += ");\n"
-
-			// append index
-			query += d
+			query.WriteString(");\n")
 		}
 
 		if tblIdx != tablesLastIndex {
-			query += "\n"
+			query.WriteString("\n")
 		}
 	}
 
-	return query, nil
+	return query.String(), nil
 }
