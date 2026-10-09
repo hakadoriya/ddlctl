@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"strings"
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
@@ -11,7 +12,7 @@ import (
 )
 
 type sqlQueryerContext = interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 type showCreateAllTablesConfig struct {
@@ -32,7 +33,7 @@ func WithShowCreateAllTablesOptionSchema(database string) ShowCreateAllTablesOpt
 	return &showCreateAllTablesOptionDatabase{database: database}
 }
 
-func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (query string, err error) {
+func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...ShowCreateAllTablesOption) (string, error) {
 	dbz := sqlz.NewDB(db)
 
 	cfg := new(showCreateAllTablesConfig)
@@ -64,13 +65,14 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		TableName       string `db:"Table"`
 		CreateStatement string `db:"Create Table"`
 	}
+	var query strings.Builder
 	for _, tn := range *tableNames {
 		showCreateTable := new(ShowCreateTable)
 		showCreateTableQuery := fmt.Sprintf("SHOW CREATE TABLE `%s`", tn.TableName)
 		if err := dbz.QueryContext(ctx, showCreateTable, showCreateTableQuery); err != nil {
 			return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", showCreateTableQuery, err)
 		}
-		query += showCreateTable.CreateStatement + ";\n"
+		query.WriteString(showCreateTable.CreateStatement + ";\n")
 
 		// MEMO: for INDEX
 		// showCreateIndex := fmt.Sprintf("SELECT CONCAT('CREATE INDEX ', INDEX_NAME, ' ON ', TABLE_NAME, ' (', GROUP_CONCAT(COLUMN_NAME ORDER BY SEQ_IN_INDEX), ');') AS 'create_statement' FROM information_schema.STATISTICS WHERE TABLE_SCHEMA = %s AND INDEX_NAME IS NOT NULL AND INDEX_NAME != 'PRIMARY' AND TABLE_NAME = '%s' GROUP BY INDEX_NAME, TABLE_NAME;", databaseQuoted, tn.TableName)
@@ -79,9 +81,9 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 		// 	return "", apperr.Errorf("dbz.QueryContext: q=%s: %w", showCreateIndex, err)
 		// }
 		// for _, createStatement := range *createStatements {
-		// 	query += createStatement.CreateStatement + "\n"
+		// 	query.WriteString(createStatement.CreateStatement + "\n")
 		// }
 	}
 
-	return query, nil
+	return query.String(), nil
 }

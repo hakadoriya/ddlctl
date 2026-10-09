@@ -17,6 +17,7 @@ const (
 	EnvKeyAutoApprove = "DDLCTL_AUTO_APPROVE"
 
 	// Golang
+
 	OptionGoColumnTag = "go-column-tag"
 	EnvKeyGoColumnTag = "DDLCTL_GO_COLUMN_TAG"
 

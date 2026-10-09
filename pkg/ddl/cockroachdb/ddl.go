@@ -1,6 +1,8 @@
 package cockroachdb
 
 import (
+	"strings"
+
 	"github.com/hakadoriya/z.go/stringz"
 
 	"github.com/hakadoriya/ddlctl/pkg/ddl/internal"
@@ -131,22 +133,22 @@ func (s *DataType) StringForDiff() string {
 	if s == nil {
 		return ""
 	}
-	var str string
+	var str strings.Builder
 	if s.Type != "" {
-		str += string(s.Type)
+		str.WriteString(string(s.Type))
 	} else {
-		str += string(TOKEN_ILLEGAL)
+		str.WriteString(string(TOKEN_ILLEGAL))
 	}
 
 	if s.Expr != nil && len(s.Expr.Idents) > 0 {
-		str += "("
+		str.WriteString("(")
 		for _, ident := range s.Expr.Idents {
-			str += ident.StringForDiff()
+			str.WriteString(ident.StringForDiff())
 		}
-		str += ")"
+		str.WriteString(")")
 	}
 
-	return str
+	return str.String()
 }
 
 type Using struct {

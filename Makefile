@@ -3,7 +3,7 @@ export REPO_ROOT          := $(shell git rev-parse --show-toplevel || exit 1)
 export REPO_LOCAL_DIR     := ${REPO_ROOT}/.local
 export PATH               := ${REPO_LOCAL_DIR}/bin:${REPO_ROOT}/.bin:${PATH}
 export REPO_TMP_DIR       := ${REPO_ROOT}/.tmp
-export PRE_PUSH           := ${REPO_ROOT}/.git/hooks/pre-push
+export PRE_PUSH           := $(shell git rev-parse --path-format=absolute --git-path hooks/pre-push || exit 1)
 export GIT_TAG_LATEST     := $(shell git describe --tags --abbrev=0)
 export GIT_BRANCH_CURRENT := $(shell git rev-parse --abbrev-ref HEAD)
 export GO_MODULE_NAME     := github.com/hakadoriya/ddlctl
@@ -81,15 +81,15 @@ ci: lint credits test ## CI command set
 
 .PHONY: git-push-skip-local-ci
 git-push-skip-local-ci:  ## Run git push with skip local CI
-	-mv ${REPO_ROOT}/.git/hooks/pre-push{,.bak}
+	-mv ${PRE_PUSH}{,.bak}
 	git push
-	-mv ${REPO_ROOT}/.git/hooks/pre-push{.bak,}
+	-mv ${PRE_PUSH}{.bak,}
 
 .PHONY: git-force-push-skip-local-ci
 git-force-push-skip-local-ci:  ## Run git push with skip local CI
-	-mv ${REPO_ROOT}/.git/hooks/pre-push{,.bak}
+	-mv ${PRE_PUSH}{,.bak}
 	git push -f
-	-mv ${REPO_ROOT}/.git/hooks/pre-push{.bak,}
+	-mv ${PRE_PUSH}{.bak,}
 
 .PHONY: act-check
 act-check:

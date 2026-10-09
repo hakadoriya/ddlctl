@@ -28,58 +28,59 @@ func (s *CreateIndexStmt) GetNameForDiff() string {
 }
 
 func (s *CreateIndexStmt) String() string {
-	var str string
+	var str strings.Builder
 	if s.Comment != "" {
 		comments := strings.Split(s.Comment, "\n")
 		for i := range comments {
 			if comments[i] != "" {
-				str += CommentPrefix + comments[i] + "\n"
+				str.WriteString(CommentPrefix + comments[i] + "\n")
 			}
 		}
 	}
-	str += "CREATE "
+	str.WriteString("CREATE ")
 	if s.Unique {
-		str += "UNIQUE "
+		str.WriteString("UNIQUE ")
 	}
-	str += "INDEX "
+	str.WriteString("INDEX ")
 	if s.IfNotExists {
-		str += "IF NOT EXISTS "
+		str.WriteString("IF NOT EXISTS ")
 	}
-	str += s.Name.String() + " ON " + s.TableName.String()
+	str.WriteString(s.Name.String() + " ON " + s.TableName.String())
 	if s.UsingPreColumns != nil {
-		str += " " + s.UsingPreColumns.String()
+		str.WriteString(" " + s.UsingPreColumns.String())
 	}
-	str += " (" + stringz.JoinStringers(", ", s.Columns...) + ")"
+	str.WriteString(" (" + stringz.JoinStringers(", ", s.Columns...) + ")")
 	if s.UsingPostColumns != nil {
-		str += " " + s.UsingPostColumns.String()
+		str.WriteString(" " + s.UsingPostColumns.String())
 	}
-	str += ";\n"
-	return str
+	str.WriteString(";\n")
+	return str.String()
 }
 
 func (s *CreateIndexStmt) StringForDiff() string {
-	str := "CREATE "
+	var str strings.Builder
+	str.WriteString("CREATE ")
 	if s.Unique {
-		str += "UNIQUE "
+		str.WriteString("UNIQUE ")
 	}
-	str += "INDEX "
-	str += s.Name.StringForDiff() + " ON " + s.TableName.StringForDiff()
+	str.WriteString("INDEX ")
+	str.WriteString(s.Name.StringForDiff() + " ON " + s.TableName.StringForDiff())
 	if s.UsingPreColumns != nil {
-		str += " " + s.UsingPreColumns.String()
+		str.WriteString(" " + s.UsingPreColumns.String())
 	}
-	str += " ("
+	str.WriteString(" (")
 	for i, c := range s.Columns {
 		if i > 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += c.StringForDiff()
+		str.WriteString(c.StringForDiff())
 	}
-	str += ")"
+	str.WriteString(")")
 	if s.UsingPostColumns != nil {
-		str += " " + s.UsingPostColumns.String()
+		str.WriteString(" " + s.UsingPostColumns.String())
 	}
-	str += ";\n"
-	return str
+	str.WriteString(";\n")
+	return str.String()
 }
 
 func (*CreateIndexStmt) isStmt()            {}

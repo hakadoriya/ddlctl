@@ -26,85 +26,85 @@ func (s *AlterTableStmt) GetNameForDiff() string {
 
 //nolint:cyclop,funlen,gocognit
 func (s *AlterTableStmt) String() string {
-	var str string
+	var str strings.Builder
 	if s.Comment != "" {
 		comments := strings.Split(s.Comment, "\n")
 		for i := range comments {
 			if comments[i] != "" {
-				str += CommentPrefix + comments[i] + "\n"
+				str.WriteString(CommentPrefix + comments[i] + "\n")
 			}
 		}
 	}
-	str += "ALTER TABLE "
-	str += s.Name.String() + " "
+	str.WriteString("ALTER TABLE ")
+	str.WriteString(s.Name.String() + " ")
 	switch a := s.Action.(type) {
 	case *RenameTable:
-		str += "RENAME TO "
-		str += a.NewName.String()
+		str.WriteString("RENAME TO ")
+		str.WriteString(a.NewName.String())
 	case *RenameColumn:
-		str += "RENAME COLUMN " + a.Name.String() + " TO " + a.NewName.String()
+		str.WriteString("RENAME COLUMN " + a.Name.String() + " TO " + a.NewName.String())
 	case *RenameConstraint:
-		str += "RENAME CONSTRAINT " + a.Name.String() + " TO " + a.NewName.String()
+		str.WriteString("RENAME CONSTRAINT " + a.Name.String() + " TO " + a.NewName.String())
 	case *AddColumn:
-		str += "ADD COLUMN " + a.Column.String()
+		str.WriteString("ADD COLUMN " + a.Column.String())
 	case *DropColumn:
-		str += "DROP COLUMN " + a.Name.String()
+		str.WriteString("DROP COLUMN " + a.Name.String())
 	case *ModifyColumn:
-		str += "MODIFY " + a.Name.String() + " " + a.DataType.String()
+		str.WriteString("MODIFY " + a.Name.String() + " " + a.DataType.String())
 		if a.CharacterSet != nil {
-			str += " CHARACTER SET " + a.CharacterSet.String()
+			str.WriteString(" CHARACTER SET " + a.CharacterSet.String())
 		}
 		if a.Collate != nil {
-			str += " COLLATE " + a.Collate.String()
+			str.WriteString(" COLLATE " + a.Collate.String())
 		}
 		if a.NotNull {
-			str += " NOT NULL"
+			str.WriteString(" NOT NULL")
 		} else {
-			str += " NULL"
+			str.WriteString(" NULL")
 		}
 		if a.AutoIncrement {
-			str += " AUTO_INCREMENT"
+			str.WriteString(" AUTO_INCREMENT")
 		}
 		if a.Default != nil {
-			str += " " + a.Default.String()
+			str.WriteString(" " + a.Default.String())
 		}
 		if a.OnAction != "" {
-			str += " " + a.OnAction
+			str.WriteString(" " + a.OnAction)
 		}
 		if a.Comment != "" {
-			str += " COMMENT " + a.Comment
+			str.WriteString(" COMMENT " + a.Comment)
 		}
 	case *AlterColumnDropDefault:
-		str += "ALTER " + a.Name.String() + " " + "DROP DEFAULT"
+		str.WriteString("ALTER " + a.Name.String() + " " + "DROP DEFAULT")
 	case *AddConstraint:
-		str += "ADD " + a.Constraint.String()
+		str.WriteString("ADD " + a.Constraint.String())
 		if a.NotValid {
-			str += " NOT VALID"
+			str.WriteString(" NOT VALID")
 		}
 	case *DropConstraint:
-		str += "DROP "
+		str.WriteString("DROP ")
 		if a.Name.String() == "PRIMARY KEY" {
-			str += "PRIMARY KEY"
+			str.WriteString("PRIMARY KEY")
 		} else {
-			str += "CONSTRAINT " + a.Name.String()
+			str.WriteString("CONSTRAINT " + a.Name.String())
 		}
 	case *AlterConstraint:
-		str += "ALTER CONSTRAINT " + a.Name.String() + " "
+		str.WriteString("ALTER CONSTRAINT " + a.Name.String() + " ")
 		if a.Deferrable {
-			str += "DEFERRABLE"
+			str.WriteString("DEFERRABLE")
 		} else {
-			str += "NOT DEFERRABLE"
+			str.WriteString("NOT DEFERRABLE")
 		}
 		if a.InitiallyDeferred {
-			str += " INITIALLY DEFERRED"
+			str.WriteString(" INITIALLY DEFERRED")
 		} else {
-			str += " INITIALLY IMMEDIATE"
+			str.WriteString(" INITIALLY IMMEDIATE")
 		}
 	case *AlterTableOption:
-		str += a.String()
+		str.WriteString(a.String())
 	}
 
-	return str + ";\n"
+	return str.String() + ";\n"
 }
 
 func (s *AlterTableStmt) GoString() string { return internal.GoString(*s) }
