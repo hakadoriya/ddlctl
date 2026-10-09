@@ -8,9 +8,11 @@ linters:
     - depguard # unnecessary
     - dupl # disable to avoid encouraging excessive DRY
     - exhaustruct # https://github.com/GaijinEntertainment/go-exhaustruct
+    - exhaustruct_v5 # https://github.com/GaijinEntertainment/go-exhaustruct
     - funcorder # unnecessary
     - goconst # unnecessary
     - godox # unnecessary
+    - gomodguard # deprecated (replaced by gomodguard_v2)
     - gosmopolitan # unnecessary
     - interfacebloat # unnecessary
     - lll # unnecessary
