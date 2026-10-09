@@ -169,7 +169,7 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 			}
 		}
 		commentTrimmedDDL := readLine(ddlStr, "\n", readLineFuncRemoveCommentLine("--"))
-		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
+		for q := range strings.SplitSeq(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
 				// skip empty query
 				continue

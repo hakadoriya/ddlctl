@@ -11,7 +11,7 @@ import (
 )
 
 type sqlQueryerContext = interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 type showCreateAllTablesConfig struct {

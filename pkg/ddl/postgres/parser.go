@@ -6,6 +6,7 @@ package postgres
 import (
 	"fmt"
 	"runtime"
+	"slices"
 	"strings"
 
 	"github.com/hakadoriya/z.go/pathz/filepathz"
@@ -791,37 +792,23 @@ func isConstraint(tokenType TokenType) bool {
 }
 
 func (p *Parser) isCurrentToken(expectedTypes ...TokenType) bool {
-	for _, expected := range expectedTypes {
-		if expected == p.currentToken.Type {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expectedTypes, p.currentToken.Type)
 }
 
 func (p *Parser) checkCurrentToken(expectedTypes ...TokenType) error {
-	for _, expected := range expectedTypes {
-		if expected == p.currentToken.Type {
-			return nil
-		}
+	if slices.Contains(expectedTypes, p.currentToken.Type) {
+		return nil
 	}
 	return apperr.Errorf("currentToken=%#v, peekToken=%#v: expected=%v, but got=%v: %w", p.currentToken, p.peekToken, stringz.JoinStringers(",", expectedTypes...), p.currentToken.Type, ddl.ErrUnexpectedCurrentToken)
 }
 
 func (p *Parser) isPeekToken(expectedTypes ...TokenType) bool {
-	for _, expected := range expectedTypes {
-		if expected == p.peekToken.Type {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(expectedTypes, p.peekToken.Type)
 }
 
 func (p *Parser) checkPeekToken(expectedTypes ...TokenType) error {
-	for _, expected := range expectedTypes {
-		if expected == p.peekToken.Type {
-			return nil
-		}
+	if slices.Contains(expectedTypes, p.peekToken.Type) {
+		return nil
 	}
 	return apperr.Errorf("currentToken=%#v, peekToken=%#v: expected=%v, but got=%v: %w", p.currentToken, p.peekToken, stringz.JoinStringers(",", expectedTypes...), p.peekToken.Type, ddl.ErrUnexpectedPeekToken)
 }

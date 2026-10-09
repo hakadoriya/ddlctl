@@ -14,7 +14,7 @@ import (
 // NOTE: https://cloud.google.com/spanner/docs/information-schema?hl=ja
 
 type sqlQueryerContext = interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 const (

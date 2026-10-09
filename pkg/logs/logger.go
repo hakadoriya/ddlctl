@@ -32,8 +32,8 @@ func NewDebug() Logger { //nolint:ireturn
 
 type Logger interface {
 	io.Writer
-	Print(v ...interface{})
-	Printf(format string, v ...interface{})
+	Print(v ...any)
+	Printf(format string, v ...any)
 	LineWriter(prefix string) io.Writer
 }
 
@@ -43,8 +43,8 @@ type DefaultLogger struct {
 	*log.Logger
 }
 
-func (l *DefaultLogger) Print(v ...interface{}) { _ = l.Output(callerSkip, fmt.Sprint(v...)) }
-func (l *DefaultLogger) Printf(format string, v ...interface{}) {
+func (l *DefaultLogger) Print(v ...any) { _ = l.Output(callerSkip, fmt.Sprint(v...)) }
+func (l *DefaultLogger) Printf(format string, v ...any) {
 	_ = l.Output(callerSkip, fmt.Sprintf(format, v...))
 }
 
@@ -55,8 +55,7 @@ func (l *DefaultLogger) Write(p []byte) (n int, err error) {
 
 func (l *DefaultLogger) LineWriter(prefix string) io.Writer {
 	return ioz.WriteFunc(func(p []byte) (n int, err error) {
-		lines := bytes.Split(p, []byte("\n"))
-		for _, line := range lines {
+		for line := range bytes.SplitSeq(p, []byte("\n")) {
 			_ = l.Output(1, prefix+string(line))
 		}
 
