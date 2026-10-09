@@ -550,7 +550,7 @@ ALTER TABLE "users" ALTER COLUMN "age" SET DEFAULT ((0 + 3) - 1 * 4 / 2);
 
 		expectedStr := `-- -created_at TIMESTAMP OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL)
 -- +created_at TIMESTAMP
-ALTER TABLE complex_defaults ALTER COLUMN created_at DROP OPTIONS;
+ALTER TABLE complex_defaults ALTER COLUMN created_at SET OPTIONS (allow_commit_timestamp = NULL, option_name = NULL);
 -- -updated_at TIMESTAMP
 -- +updated_at TIMESTAMP OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL)
 ALTER TABLE complex_defaults ALTER COLUMN updated_at SET OPTIONS (allow_commit_timestamp = TRUE, option_name = NULL);

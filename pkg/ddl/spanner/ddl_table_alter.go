@@ -60,7 +60,9 @@ func (s *AlterTableStmt) String() string {
 	case *AlterColumnSetOptions:
 		str += "ALTER COLUMN " + a.Name.String() + " SET OPTIONS " + a.Options.String()
 	case *AlterColumnDropOptions:
-		str += "ALTER COLUMN " + a.Name.String() + " DROP OPTIONS"
+		// NOTE: Cloud Spanner has no DROP OPTIONS syntax. Reset each option to its default
+		//       by setting it to NULL instead.
+		str += "ALTER COLUMN " + a.Name.String() + " SET OPTIONS " + resetOptionsExpr(a.Options).String()
 	case *AddConstraint:
 		str += "ADD " + a.Constraint.String()
 		if a.NotValid {
@@ -185,14 +187,76 @@ func (*AlterColumnSetOptions) isAlterTableAction() {}
 
 func (s *AlterColumnSetOptions) GoString() string { return internal.GoString(*s) }
 
-// AlterColumnDropOptions represents ALTER TABLE table_name ALTER COLUMN column_name DROP OPTIONS.
+// AlterColumnDropOptions represents removing every column option.
+//
+// Cloud Spanner has no DROP OPTIONS syntax, so this is rendered as
+// ALTER TABLE table_name ALTER COLUMN column_name SET OPTIONS (option_name = NULL, ...),
+// which resets each option to its default.
+//
+// ref. https://cloud.google.com/spanner/docs/reference/standard-sql/data-definition-language#alter_table
 type AlterColumnDropOptions struct {
 	Name *Ident
+
+	// Options holds the options the column has before the change. Only the option names are
+	// used; each of them is set to NULL to reset it.
+	Options *Expr
 }
 
 func (*AlterColumnDropOptions) isAlterTableAction() {}
 
 func (s *AlterColumnDropOptions) GoString() string { return internal.GoString(*s) }
+
+// resetOptionsExpr builds an OPTIONS expression that resets every option in options to its default.
+//
+// Cloud Spanner clears a column option by setting it to NULL, so each option name is paired with
+// NULL. A nil or empty options yields "()", which Cloud Spanner accepts as a no-op.
+func resetOptionsExpr(options *Expr) *Expr {
+	names := optionNames(options)
+
+	idents := make([]*Ident, 0, len(names)*4+2) //nolint:mnd // "name = NULL" plus a separator per option, and the surrounding parentheses
+	idents = append(idents, &Ident{Name: "(", Raw: "("})
+	for i, name := range names {
+		if i > 0 {
+			idents = append(idents, &Ident{Name: ",", Raw: ","})
+		}
+		idents = append(idents,
+			&Ident{Name: name, Raw: name},
+			&Ident{Name: "=", Raw: "="},
+			&Ident{Name: "NULL", Raw: "NULL"},
+		)
+	}
+	idents = append(idents, &Ident{Name: ")", Raw: ")"})
+
+	return &Expr{Idents: idents}
+}
+
+// optionNames extracts the option names from an OPTIONS expression.
+//
+// The expression is a token sequence such as `( name = value , name2 = value2 )`, so the identifier
+// that follows "(" or "," is an option name.
+func optionNames(options *Expr) []string {
+	if options == nil {
+		return nil
+	}
+
+	names := make([]string, 0, len(options.Idents))
+	expectName := false
+	for _, ident := range options.Idents {
+		switch s := ident.String(); s {
+		case "(", ",":
+			expectName = true
+		case ")":
+			expectName = false
+		default:
+			if expectName {
+				names = append(names, s)
+				expectName = false
+			}
+		}
+	}
+
+	return names
+}
 
 // AddConstraint represents ALTER TABLE table_name ADD CONSTRAINT.
 type AddConstraint struct {

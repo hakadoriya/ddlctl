@@ -2,6 +2,7 @@ package spanner
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
@@ -353,4 +354,115 @@ func TestAlterTableStmt_GetNameForDiff(t *testing.T) {
 	actual := stmt.GetNameForDiff()
 
 	require.Equal(t, expected, actual)
+}
+
+func Test_optionNames(t *testing.T) {
+	t.Parallel()
+
+	// ident builds the token sequence the parser produces for an OPTIONS expression.
+	ident := func(raws ...string) *Expr {
+		idents := make([]*Ident, 0, len(raws))
+		for _, raw := range raws {
+			idents = append(idents, &Ident{Name: raw, Raw: raw})
+		}
+		return &Expr{Idents: idents}
+	}
+
+	for _, tt := range []struct {
+		name     string
+		options  *Expr
+		expected []string
+	}{
+		{
+			name:     "success,nil",
+			options:  nil,
+			expected: nil,
+		},
+		{
+			name:     "success,empty",
+			options:  ident(),
+			expected: []string{},
+		},
+		{
+			name:     "success,single",
+			options:  ident("(", "allow_commit_timestamp", "=", "TRUE", ")"),
+			expected: []string{"allow_commit_timestamp"},
+		},
+		{
+			name:     "success,multiple",
+			options:  ident("(", "allow_commit_timestamp", "=", "TRUE", ",", "option_name", "=", "NULL", ")"),
+			expected: []string{"allow_commit_timestamp", "option_name"},
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.expected, optionNames(tt.options))
+		})
+	}
+}
+
+func Test_resetOptionsExpr(t *testing.T) {
+	t.Parallel()
+
+	ident := func(raws ...string) *Expr {
+		idents := make([]*Ident, 0, len(raws))
+		for _, raw := range raws {
+			idents = append(idents, &Ident{Name: raw, Raw: raw})
+		}
+		return &Expr{Idents: idents}
+	}
+
+	for _, tt := range []struct {
+		name     string
+		options  *Expr
+		expected string
+	}{
+		{
+			// Cloud Spanner accepts an empty OPTIONS clause as a no-op.
+			name:     "success,nil",
+			options:  nil,
+			expected: "()",
+		},
+		{
+			name:     "success,single",
+			options:  ident("(", "allow_commit_timestamp", "=", "TRUE", ")"),
+			expected: "(allow_commit_timestamp = NULL)",
+		},
+		{
+			// Every option the column currently has is reset, not only the first one.
+			name:     "success,multiple",
+			options:  ident("(", "allow_commit_timestamp", "=", "TRUE", ",", "option_name", "=", "NULL", ")"),
+			expected: "(allow_commit_timestamp = NULL, option_name = NULL)",
+		},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			assert.Equal(t, tt.expected, resetOptionsExpr(tt.options).String())
+		})
+	}
+}
+
+func Test_AlterColumnDropOptions_String(t *testing.T) {
+	t.Parallel()
+
+	// Cloud Spanner has no DROP OPTIONS syntax, so the statement must be rendered as SET OPTIONS
+	// with every option reset to NULL.
+	stmt := &AlterTableStmt{
+		Name: &ObjectName{Name: &Ident{Name: "users", Raw: "users"}},
+		Action: &AlterColumnDropOptions{
+			Name: &Ident{Name: "created_at", Raw: "created_at"},
+			Options: &Expr{Idents: []*Ident{
+				{Name: "(", Raw: "("},
+				{Name: "allow_commit_timestamp", Raw: "allow_commit_timestamp"},
+				{Name: "=", Raw: "="},
+				{Name: "TRUE", Raw: "TRUE"},
+				{Name: ")", Raw: ")"},
+			}},
+		},
+	}
+
+	assert.StringContains(t, stmt.String(), "ALTER COLUMN created_at SET OPTIONS (allow_commit_timestamp = NULL)")
+	assert.False(t, strings.Contains(stmt.String(), "DROP OPTIONS"))
 }
