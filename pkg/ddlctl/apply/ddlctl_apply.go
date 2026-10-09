@@ -266,7 +266,7 @@ func splitExec(
 				}
 
 				// If the error is not one of the above, error and log. go to the next DDL;
-				logs.Warn.Printf(err.Error())
+				logs.Warn.Print(err.Error())
 			}
 		}
 		if outerErr != nil {
