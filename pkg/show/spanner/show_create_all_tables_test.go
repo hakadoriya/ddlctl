@@ -4,11 +4,16 @@ import (
 	"context"
 	"database/sql/driver"
 	"errors"
+	"fmt"
+	"strings"
 	"testing"
+	"testing/quick"
 
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
+	"github.com/hakadoriya/ddlctl/pkg/ddl"
+	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
 	"github.com/hakadoriya/ddlctl/pkg/internal/fakesql"
 )
 
@@ -206,4 +211,73 @@ CREATE INDEX LogsByUserIdLoggedAt ON Logs (UserId, LoggedAt);
 			require.ErrorIs(t, err, errQuery)
 		})
 	}
+}
+
+func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	// 主キーのカラム数の上限 (Cloud Spanner の上限 16 に合わせる)
+	const maxPrimaryKeyColumns = 16
+
+	// 主キーの各カラムの並び順 (ASC / DESC) を生成し、ShowCreateAllTables の出力をパースした結果が
+	// 同じ並び順で書いた DDL と差分なしになることを検証する。
+	// 差分があると ddlctl diff / apply が毎回 DROP TABLE + CREATE TABLE を生成し、テーブルのデータが消える。
+	property := func(descs []bool) bool {
+		if len(descs) == 0 {
+			// 主キーのないテーブルは対象外
+			return true
+		}
+		if len(descs) > maxPrimaryKeyColumns {
+			descs = descs[:maxPrimaryKeyColumns]
+		}
+
+		columns := &fakesql.Rows{Columns: []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"}}
+		primaryKey := &fakesql.Rows{Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}}
+		columnDefs := make([]string, 0, len(descs))
+		keyParts := make([]string, 0, len(descs))
+		for i, desc := range descs {
+			name := fmt.Sprintf("Key%d", i)
+			ordering, keyPart := "ASC", name
+			if desc {
+				ordering, keyPart = "DESC", name+" DESC"
+			}
+			columns.Values = append(columns.Values, []driver.Value{"T", name, nil, "NO", "STRING(MAX)"})
+			primaryKey.Values = append(primaryKey.Values, []driver.Value{"PRIMARY_KEY", "PRIMARY_KEY", name, ordering, int64(i + 1)})
+			columnDefs = append(columnDefs, "    "+name+" STRING(MAX) NOT NULL")
+			keyParts = append(keyParts, keyPart)
+		}
+		expected := "CREATE TABLE T (\n" + strings.Join(columnDefs, ",\n") + "\n) PRIMARY KEY (" + strings.Join(keyParts, ", ") + ");\n"
+
+		fixture := showCreateAllTablesFixture{"T": {
+			queryShowCreateAllTables:                columns,
+			queryShowTableColumnOptions:             {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
+			queryShowPrimaryKey:                     primaryKey,
+			querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
+			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+		}}
+		db := fakesql.OpenDB(fixture.queryFunc(t, []string{"T"}, "", nil))
+		defer func() { _ = db.Close() }()
+
+		actual, err := ShowCreateAllTables(context.Background(), db)
+		if err != nil {
+			t.Logf("ShowCreateAllTables: %v", err)
+			return false
+		}
+		before, err := ddlspanner.NewParser(ddlspanner.NewLexer(actual)).Parse()
+		if err != nil {
+			t.Logf("parse ShowCreateAllTables output: %v\n%s", err, actual)
+			return false
+		}
+		after, err := ddlspanner.NewParser(ddlspanner.NewLexer(expected)).Parse()
+		if err != nil {
+			t.Logf("parse expected DDL: %v\n%s", err, expected)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, after); !errors.Is(err, ddl.ErrNoDifference) {
+			t.Logf("unexpected difference: err=%v\n--- ShowCreateAllTables\n%s--- expected\n%s", err, actual, expected)
+			return false
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(property, nil))
 }

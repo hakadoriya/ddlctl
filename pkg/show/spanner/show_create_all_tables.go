@@ -132,6 +132,9 @@ type informationSchemaPrimaryKey struct {
 	OrdinalPosition int    `db:"ORDINAL_POSITION"`
 }
 
+// columnOrderingDesc は INDEX_COLUMNS.COLUMN_ORDERING が降順のカラムを表す値
+const columnOrderingDesc = "DESC"
+
 const (
 	querySelectIndexes = `SELECT DISTINCT INDEX_NAME, IS_UNIQUE FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = ? AND INDEX_TYPE != "PRIMARY_KEY";`
 )
@@ -266,6 +269,11 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			primaryKeyColumnsLastIndex := len(primaryKeyColumns) - 1
 			for i, pk := range primaryKeyColumns {
 				query.WriteString(pk.ColumnName)
+				// NOTE: ASC は省略時の既定値なので DESC だけを出力する。
+				// DESC を落とすと定義ファイルの主キーと食い違い、diff / apply が DROP TABLE + CREATE TABLE を生成してしまう。
+				if pk.ColumnOrdering == columnOrderingDesc {
+					query.WriteString(" " + columnOrderingDesc)
+				}
 				if i != primaryKeyColumnsLastIndex {
 					query.WriteString(", ")
 				}
