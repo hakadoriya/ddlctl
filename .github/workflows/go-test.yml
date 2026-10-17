@@ -84,7 +84,7 @@ jobs:
           ================================================================
           DEBUG_DOC
       - name: actions/cache for versenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/versenv
@@ -120,7 +120,7 @@ jobs:
           echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
           echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
       - name: actions/cache for go
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod
@@ -134,7 +134,7 @@ jobs:
       - name: Set up Buildx for docker build cache
         uses: docker/setup-buildx-action@v3
       - name: Use docker build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ env.DOCKER_BUILD_CACHE_FROM }}
           key: docker-build-buildx-${{ github.sha }}

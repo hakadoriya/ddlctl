@@ -73,7 +73,7 @@ jobs:
           ================================================================
           DEBUG_DOC
       - name: actions/cache for versenv
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/.cache/versenv
@@ -109,7 +109,7 @@ jobs:
           echo "GOVERSION=$(go version | cut -d' ' -f3)" >> "$GITHUB_OUTPUT"
           echo "GOCACHE=$(go env GOCACHE)" >> "$GITHUB_OUTPUT"
       - name: actions/cache for go
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: |
             ~/go/pkg/mod
@@ -131,7 +131,7 @@ jobs:
           if [ -n "${GITHUB_TOKEN-}" ]; then
             direnv exec . bash -Eeux -o pipefail -c 'echo "${GOPRIVATE:-}${GOPRIVATE+,}" | while read -d , -r LINE; do echo "set git config: ${LINE}"; git config --global url."https://${GITHUB_TOKEN}:x-oauth-basic@${LINE}".insteadOf "https://${LINE}"; done'
           fi
-      - uses: golangci/golangci-lint-action@v9.0.0 # ref. https://github.com/golangci/golangci-lint-action#how-to-use
+      - uses: golangci/golangci-lint-action@v9.2.0 # ref. https://github.com/golangci/golangci-lint-action#how-to-use
         with:
           working-directory: ${{ env.WORKDIR }}
           args: --timeout=600s
