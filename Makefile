@@ -3,7 +3,10 @@ export REPO_ROOT          := $(shell git rev-parse --show-toplevel || exit 1)
 export REPO_LOCAL_DIR     := ${REPO_ROOT}/.local
 export PATH               := ${REPO_LOCAL_DIR}/bin:${REPO_ROOT}/.bin:${PATH}
 export REPO_TMP_DIR       := ${REPO_ROOT}/.tmp
-export PRE_PUSH           := $(shell git rev-parse --path-format=absolute --git-path hooks/pre-push || exit 1)
+# pre-push は worktree からでも共有の .git/hooks に置く。--git-path hooks/pre-push は core.hooksPath に従うので使わない
+# (グローバルな core.hooksPath があると、このリポジトリの pre-push をリポジトリの外にコピーしてしまう)
+export GIT_COMMON_DIR     := $(shell git rev-parse --path-format=absolute --git-common-dir || exit 1)
+export PRE_PUSH           := $(if ${GIT_COMMON_DIR},${GIT_COMMON_DIR}/hooks/pre-push)
 export GIT_TAG_LATEST     := $(shell git describe --tags --abbrev=0)
 export GIT_BRANCH_CURRENT := $(shell git rev-parse --abbrev-ref HEAD)
 export GO_MODULE_NAME     := github.com/hakadoriya/ddlctl
