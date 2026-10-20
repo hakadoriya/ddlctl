@@ -7,8 +7,6 @@ export REPO_TMP_DIR       := ${REPO_ROOT}/.tmp
 # (グローバルな core.hooksPath があると、このリポジトリの pre-push をリポジトリの外にコピーしてしまう)
 export GIT_COMMON_DIR     := $(shell git rev-parse --path-format=absolute --git-common-dir || exit 1)
 export PRE_PUSH           := $(if ${GIT_COMMON_DIR},${GIT_COMMON_DIR}/hooks/pre-push)
-export GIT_TAG_LATEST     := $(shell git describe --tags --abbrev=0)
-export GIT_BRANCH_CURRENT := $(shell git rev-parse --abbrev-ref HEAD)
 export GO_MODULE_NAME     := github.com/hakadoriya/ddlctl
 export BUILD_VERSION       = $(shell git describe --tags --exact-match HEAD 2>/dev/null || git rev-parse --short HEAD)
 export BUILD_REVISION      = $(shell git rev-parse HEAD)
@@ -125,13 +123,20 @@ act-go-vuln: act-check ## Run go-vuln workflow in act
 .PHONY: build
 build:  ## Run goxz for build
 	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
-	goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
+	goxz -n ddlctl -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
 
 .PHONY: release
-release: ci ## Run goxz and gh release upload
+release:  ## Build the release archives from a clean checkout of a tag and upload them (run by .github/workflows/release-assets.yml)
 	@command -v goxz >/dev/null || go install github.com/Songmu/goxz/cmd/goxz@latest
-	git checkout main
-	git checkout "${GIT_TAG_LATEST}"
-	-goxz -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "`git describe --tags --abbrev=0`" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl
-	-gh release upload "`git describe --tags --abbrev=0`" "${REPO_TMP_DIR}"/*"`git describe --tags --abbrev=0`"*
-	git checkout "${GIT_BRANCH_CURRENT}"
+	# HEAD がタグそのもので、作業ツリーがクリーンなときだけビルドしてアップロードする。
+	# v0.0.18-rc.6 は golangci-lint --fix で書き換わった作業ツリーからビルドされ、INTERVAL 7 DAY を INTERVAL7DAY と出力するバイナリが配布された。
+	# - 確認・ビルド・アップロードを 1 行の && の連鎖にする。make -i が無視するのは行ごとの終了コードなので、確認に失敗したらビルドもアップロードもされない
+	# - 確認には git status --porcelain を使う。go build がバージョンに +dirty を付ける (vcs.modified) のと同じ基準で、追跡していないファイルも含む
+	# - 同じタグの古い成果物を消してからビルドする。ビルドに失敗したときに古い成果物をアップロードしないため
+	# - -n ddlctl でアーカイブの名前を固定する。goxz は既定でディレクトリ名を使い、versenv は ddlctl_<version>_<os>_<arch> の名前でダウンロードする
+	# - RELEASE_DRY_RUN=true のときはアップロードしない
+	tag="$$(git describe --tags --exact-match HEAD)" \
+	&& { test -z "$$(git status --porcelain)" || { echo "release: the working tree is not clean" 1>&2; git status --porcelain 1>&2; exit 1; }; } \
+	&& rm -f "${REPO_TMP_DIR}"/*"$${tag}"* \
+	&& goxz -n ddlctl -d "${REPO_TMP_DIR}" -os=linux,darwin,windows -arch=amd64,arm64 -pv "$${tag}" -trimpath -build-ldflags "-s -w -X github.com/hakadoriya/z.go/buildinfoz.buildVersion=${BUILD_VERSION} -X github.com/hakadoriya/z.go/buildinfoz.buildRevision=${BUILD_REVISION} -X github.com/hakadoriya/z.go/buildinfoz.buildBranch=${BUILD_BRANCH} -X github.com/hakadoriya/z.go/buildinfoz.buildTimestamp=${BUILD_TIMESTAMP}" ./cmd/ddlctl \
+	&& if [ "$${RELEASE_DRY_RUN:-}" = true ]; then echo "release: RELEASE_DRY_RUN=true, skip uploading" 1>&2; ls -l "${REPO_TMP_DIR}"/*"$${tag}"*; else gh release upload "$${tag}" "${REPO_TMP_DIR}"/*"$${tag}"*; fi
