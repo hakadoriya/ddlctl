@@ -219,34 +219,51 @@ func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
 	// 主キーのカラム数の上限 (Cloud Spanner の上限 16 に合わせる)
 	const maxPrimaryKeyColumns = 16
 
-	// 主キーの各カラムの並び順 (ASC / DESC) を生成し、ShowCreateAllTables の出力をパースした結果が
-	// 同じ並び順で書いた DDL と差分なしになることを検証する。
-	// 差分があると ddlctl diff / apply が毎回 DROP TABLE + CREATE TABLE を生成し、テーブルのデータが消える。
-	property := func(descs []bool) bool {
-		if len(descs) == 0 {
+	// 定義ファイル側の並び順の書き方。ASC は省略・明示・小文字、DESC は大文字・小文字・先頭だけ大文字にゆらす
+	ascSpellings := []string{"", " ASC", " asc"}
+	descSpellings := []string{" DESC", " desc", " Desc"}
+
+	// 主キーの各カラムの並び順 (ASC / DESC) と定義ファイル側の書き方を生成し、ShowCreateAllTables の出力をパースした結果が
+	// 同じ並び順で書いた DDL と差分なしになることを検証する。あわせて、1 カラムだけ並び順を反転した DDL とは差分が出ることを検証する。
+	// 差分なしにならないと ddlctl diff / apply が毎回 DROP TABLE + CREATE TABLE を生成し、テーブルのデータが消える。
+	// 差分が出ないと、主キーの並び順の変更を見落とす。
+	property := func(specs []uint8, flip uint8) bool {
+		if len(specs) == 0 {
 			// 主キーのないテーブルは対象外
 			return true
 		}
-		if len(descs) > maxPrimaryKeyColumns {
-			descs = descs[:maxPrimaryKeyColumns]
+		if len(specs) > maxPrimaryKeyColumns {
+			specs = specs[:maxPrimaryKeyColumns]
 		}
+		flipped := int(flip) % len(specs)
 
 		columns := &fakesql.Rows{Columns: []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"}}
 		primaryKey := &fakesql.Rows{Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}}
-		columnDefs := make([]string, 0, len(descs))
-		keyParts := make([]string, 0, len(descs))
-		for i, desc := range descs {
+		columnDefs := make([]string, 0, len(specs))
+		keyParts := make([]string, 0, len(specs))
+		flippedKeyParts := make([]string, 0, len(specs))
+		for i, spec := range specs {
 			name := fmt.Sprintf("Key%d", i)
-			ordering, keyPart := "ASC", name
+			desc := spec%2 == 1
+			spelling := int(spec/2) % len(ascSpellings)
+			ordering, keyPart, flippedKeyPart := "ASC", name+ascSpellings[spelling], name+descSpellings[spelling]
 			if desc {
-				ordering, keyPart = "DESC", name+" DESC"
+				ordering, keyPart, flippedKeyPart = "DESC", name+descSpellings[spelling], name+ascSpellings[spelling]
 			}
 			columns.Values = append(columns.Values, []driver.Value{"T", name, nil, "NO", "STRING(MAX)"})
 			primaryKey.Values = append(primaryKey.Values, []driver.Value{"PRIMARY_KEY", "PRIMARY_KEY", name, ordering, int64(i + 1)})
 			columnDefs = append(columnDefs, "    "+name+" STRING(MAX) NOT NULL")
 			keyParts = append(keyParts, keyPart)
+			if i == flipped {
+				flippedKeyParts = append(flippedKeyParts, flippedKeyPart)
+			} else {
+				flippedKeyParts = append(flippedKeyParts, keyPart)
+			}
 		}
-		expected := "CREATE TABLE T (\n" + strings.Join(columnDefs, ",\n") + "\n) PRIMARY KEY (" + strings.Join(keyParts, ", ") + ");\n"
+		ddlOf := func(keyParts []string) string {
+			return "CREATE TABLE T (\n" + strings.Join(columnDefs, ",\n") + "\n) PRIMARY KEY (" + strings.Join(keyParts, ", ") + ");\n"
+		}
+		expected, flippedDDL := ddlOf(keyParts), ddlOf(flippedKeyParts)
 
 		fixture := showCreateAllTablesFixture{"T": {
 			queryShowCreateAllTables:                columns,
@@ -275,6 +292,15 @@ func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
 		}
 		if _, err := ddlspanner.Diff(before, after); !errors.Is(err, ddl.ErrNoDifference) {
 			t.Logf("unexpected difference: err=%v\n--- ShowCreateAllTables\n%s--- expected\n%s", err, actual, expected)
+			return false
+		}
+		flippedAfter, err := ddlspanner.NewParser(ddlspanner.NewLexer(flippedDDL)).Parse()
+		if err != nil {
+			t.Logf("parse flipped DDL: %v\n%s", err, flippedDDL)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, flippedAfter); err != nil {
+			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- flipped\n%s", err, actual, flippedDDL)
 			return false
 		}
 		return true
