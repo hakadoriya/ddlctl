@@ -47,7 +47,7 @@ clean-golangci-lint:  ## Clean up lint cache
 	golangci-lint cache clean
 
 .PHONY: lint
-lint:  ## Run gitleaks, go mod tidy, golangci-lint
+lint:  ## Run gitleaks, go mod tidy -diff, golangci-lint without modifying the working tree
 	# gitleaks ref. https://github.com/gitleaks/gitleaks
 	@if ! command -v gitleaks >/dev/null 2>&1; then \
 		printf "\033[31;1m%s\033[0m\n" "gitleaks is not installed: brew install gitleaks" 1>&2; \
@@ -55,18 +55,27 @@ lint:  ## Run gitleaks, go mod tidy, golangci-lint
 	fi
 	gitleaks detect --source . -v
 	# tidy
-	go mod tidy
-	git diff --exit-code go.mod go.sum
+	# make ci (pre-push hook と make release の前) で作業ツリーを書き換えないように、差分を出すだけにする
+	go mod tidy -diff
 	# lint
 	# ref. https://golangci-lint.run/usage/linters/
+	# --fix は付けない。付けると、失敗したときに書き換わった作業ツリーが残る (v0.0.18-rc.6 はその作業ツリーからビルドされた)
+	golangci-lint run
+
+.PHONY: lint-fix
+lint-fix:  ## Run go mod tidy and golangci-lint --fix (modifies the working tree)
+	go mod tidy
 	golangci-lint run --fix
-	git diff --exit-code
 
 .PHONY: credits
 credits:  ## Generate CREDITS file
 	command -v gocredits || go install github.com/Songmu/gocredits/cmd/gocredits@latest
 	gocredits -skip-missing . > CREDITS
-	git diff --exit-code
+
+.PHONY: credits-check
+credits-check:  ## Check that CREDITS is up to date without modifying the working tree
+	command -v gocredits || go install github.com/Songmu/gocredits/cmd/gocredits@latest
+	gocredits -skip-missing . | diff -u CREDITS -
 
 .PHONY: test
 test: githooks ## Run go test and display coverage
@@ -80,7 +89,7 @@ test-cover: githooks ## Run go test and display coverage
 	go tool cover -func=./coverage.txt
 
 .PHONY: ci
-ci: lint credits test ## CI command set
+ci: lint credits-check test ## CI command set
 
 .PHONY: git-push-skip-local-ci
 git-push-skip-local-ci:  ## Run git push with skip local CI
