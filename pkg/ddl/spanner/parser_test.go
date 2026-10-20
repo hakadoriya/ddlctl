@@ -561,3 +561,14 @@ func TestParser_parseDataType(t *testing.T) {
 		require.ErrorIs(t, err, ddl.ErrUnexpectedCurrentToken)
 	})
 }
+
+// TestParser_Parse_PrimaryKeyOrder は、主キーの並び順を ASC を省略し DESC を大文字にした形で出力することを確かめる。
+func TestParser_Parse_PrimaryKeyOrder(t *testing.T) {
+	t.Parallel()
+
+	actual, err := NewParser(NewLexer("CREATE TABLE T (A STRING(36) NOT NULL, b STRING(36) NOT NULL, `C` STRING(36) NOT NULL) PRIMARY KEY (A ASC, b desc, `C` DESC);")).Parse()
+	require.NoError(t, err)
+
+	expected := "CREATE TABLE T (\n    A STRING(36) NOT NULL,\n    b STRING(36) NOT NULL,\n    `C` STRING(36) NOT NULL\n) PRIMARY KEY (A, b DESC, `C` DESC);\n"
+	assert.Equal(t, expected, actual.String())
+}

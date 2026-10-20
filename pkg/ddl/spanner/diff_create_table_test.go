@@ -655,3 +655,70 @@ ALTER TABLE "users" ADD CONSTRAINT users_age_check CHECK ("age" >= 0) NOT VALID;
 		t.Logf("✅: %s:\n%s", t.Name(), ddls)
 	})
 }
+
+// TestDiffCreateTable_PrimaryKeyOrder は、主キーの並び順の書き方のゆれ (ASC の明示・省略、大文字・小文字) を
+// 同じものとして比べ、並び順そのものが違うときだけ表を作り直すことを確かめる。
+func TestDiffCreateTable_PrimaryKeyOrder(t *testing.T) {
+	t.Parallel()
+
+	const columns = `CREATE TABLE T (A STRING(36) NOT NULL, B STRING(36) NOT NULL) `
+
+	diff := func(t *testing.T, beforePK, afterPK string) (*DDL, error) {
+		t.Helper()
+
+		beforeDDL, err := NewParser(NewLexer(columns + beforePK + ";")).Parse()
+		require.NoError(t, err)
+		afterDDL, err := NewParser(NewLexer(columns + afterPK + ";")).Parse()
+		require.NoError(t, err)
+
+		//nolint:forcetypeassert
+		return DiffCreateTable(
+			beforeDDL.Stmts[0].(*CreateTableStmt),
+			afterDDL.Stmts[0].(*CreateTableStmt),
+			DiffCreateTableUseAlterTableAddConstraintNotValid(false),
+		)
+	}
+
+	noDifferenceCases := []struct {
+		name     string
+		beforePK string
+		afterPK  string
+	}{
+		{name: "ASC を明示しても省略と同じ", beforePK: "PRIMARY KEY (A ASC, B DESC)", afterPK: "PRIMARY KEY (A, B DESC)"},
+		{name: "小文字の desc は DESC と同じ", beforePK: "PRIMARY KEY (A, B desc)", afterPK: "PRIMARY KEY (A, B DESC)"},
+		{name: "小文字の asc は省略と同じ", beforePK: "PRIMARY KEY (A asc, B)", afterPK: "PRIMARY KEY (A, B)"},
+		{name: "引用符の有無は区別しない", beforePK: "PRIMARY KEY (`A`, `B` DESC)", afterPK: "PRIMARY KEY (A, B DESC)"},
+	}
+	for _, tc := range noDifferenceCases {
+		t.Run("failure,ddl.ErrNoDifference,"+tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual, err := diff(t, tc.beforePK, tc.afterPK)
+			assert.ErrorIs(t, err, ddl.ErrNoDifference)
+			assert.Nil(t, actual)
+		})
+	}
+
+	recreateCases := []struct {
+		name     string
+		beforePK string
+		afterPK  string
+	}{
+		{name: "ASC から DESC", beforePK: "PRIMARY KEY (A, B)", afterPK: "PRIMARY KEY (A, B DESC)"},
+		{name: "DESC から ASC の明示", beforePK: "PRIMARY KEY (A, B DESC)", afterPK: "PRIMARY KEY (A, B ASC)"},
+		{name: "列の順番", beforePK: "PRIMARY KEY (A, B)", afterPK: "PRIMARY KEY (B, A)"},
+	}
+	for _, tc := range recreateCases {
+		t.Run("success,DropAndCreateTable,"+tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			actual, err := diff(t, tc.beforePK, tc.afterPK)
+			require.NoError(t, err)
+			require.Equal(t, 2, len(actual.Stmts))
+			_, isDrop := actual.Stmts[0].(*DropTableStmt)
+			assert.True(t, isDrop)
+			_, isCreate := actual.Stmts[1].(*CreateTableStmt)
+			assert.True(t, isCreate)
+		})
+	}
+}
