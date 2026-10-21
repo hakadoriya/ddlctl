@@ -200,11 +200,23 @@ LabelTableOptions:
 			}
 			opt.Name = "PRIMARY KEY"
 			p.nextToken() // current = `(`
-			idents, err := p.parseExpr()
+			columns, err := p.parseColumnIdents()
 			if err != nil {
-				return nil, apperr.Errorf(errFmtPrefix+"parseExpr: %w", err)
+				return nil, apperr.Errorf(errFmtPrefix+"parseColumnIdents: %w", err)
 			}
-			opt.Value = opt.Value.Append(idents...)
+			// 並び順は ASC を省略し DESC を大文字にした形に揃える。主キーは Options.StringForDiff の文字列で比べるので、
+			// 揃えないと ASC の明示や小文字の desc だけの違いで DROP TABLE + CREATE TABLE になる
+			opt.Value = opt.Value.Append(NewRawIdent("("))
+			for i, column := range columns {
+				if i != 0 {
+					opt.Value = opt.Value.Append(NewRawIdent(","))
+				}
+				opt.Value = opt.Value.Append(column.Ident)
+				if column.Order != nil && column.Order.Desc {
+					opt.Value = opt.Value.Append(NewRawIdent(string(TOKEN_DESC)))
+				}
+			}
+			opt.Value = opt.Value.Append(NewRawIdent(")"))
 			createTableStmt.Options = append(createTableStmt.Options, opt)
 			continue
 		case TOKEN_INTERLEAVE:
