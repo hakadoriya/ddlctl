@@ -33,10 +33,12 @@ func (t TokenType) String() string {
 //nolint:revive
 const (
 	// SPECIAL TOKENS.
+
 	TOKEN_ILLEGAL TokenType = "ILLEGAL"
 	TOKEN_EOF     TokenType = "EOF"
 
 	// SPECIAL CHARACTERS.
+
 	TOKEN_OPEN_PAREN      TokenType = "OPEN_PAREN"      // (
 	TOKEN_CLOSE_PAREN     TokenType = "CLOSE_PAREN"     // )
 	TOKEN_COMMA           TokenType = "COMMA"           // ,
@@ -53,6 +55,7 @@ const (
 	TOKEN_TYPE_ANNOTATION TokenType = "TYPE_ANNOTATION" // :::
 
 	// VERB.
+
 	TOKEN_CREATE   TokenType = "CREATE"
 	TOKEN_ALTER    TokenType = "ALTER"
 	TOKEN_DROP     TokenType = "DROP"
@@ -60,11 +63,13 @@ const (
 	TOKEN_TRUNCATE TokenType = "TRUNCATE"
 
 	// OBJECT.
+
 	TOKEN_TABLE TokenType = "TABLE"
 	TOKEN_INDEX TokenType = "INDEX"
 	TOKEN_VIEW  TokenType = "VIEW"
 
 	// OTHER.
+
 	TOKEN_IF       TokenType = "IF"
 	TOKEN_EXISTS   TokenType = "EXISTS"
 	TOKEN_USING    TokenType = "USING"
@@ -79,6 +84,7 @@ const (
 	TOKEN_SET      TokenType = "SET"
 
 	// DATA TYPE.
+
 	TOKEN_BOOLEAN           TokenType = "BOOLEAN"
 	TOKEN_BIT               TokenType = "BIT"
 	TOKEN_TINYINT           TokenType = "TINYINT"
@@ -111,6 +117,7 @@ const (
 	TOKEN_ENUM              TokenType = "ENUM"
 
 	// COLUMN.
+
 	TOKEN_DEFAULT TokenType = "DEFAULT"
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_ASC     TokenType = "ASC"
@@ -118,6 +125,7 @@ const (
 	TOKEN_COMMENT TokenType = "COMMENT"
 
 	// CONSTRAINT.
+
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
 	TOKEN_PRIMARY    TokenType = "PRIMARY"
 	TOKEN_KEY        TokenType = "KEY"
@@ -127,21 +135,25 @@ const (
 	TOKEN_CHECK      TokenType = "CHECK"
 
 	// OPTIONS.
+
 	TOKEN_ENGINE  TokenType = "ENGINE"
 	TOKEN_CHARSET TokenType = "CHARSET"
 	TOKEN_COLLATE TokenType = "COLLATE"
 
 	// FUNCTION.
+
 	TOKEN_AUTO_INCREMENT    TokenType = "AUTO_INCREMENT" //nolint:gosec
 	TOKEN_CURRENT_TIMESTAMP TokenType = "CURRENT_TIMESTAMP"
 	TOKEN_NULLIF            TokenType = "NULLIF"
 
 	// VALUE.
+
 	TOKEN_NULL  TokenType = "NULL"
 	TOKEN_TRUE  TokenType = "TRUE"
 	TOKEN_FALSE TokenType = "FALSE"
 
 	// IDENTIFIER.
+
 	TOKEN_IDENT TokenType = "IDENT"
 )
 

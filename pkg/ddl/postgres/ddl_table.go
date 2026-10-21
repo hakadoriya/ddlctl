@@ -51,20 +51,20 @@ func (c *PrimaryKeyConstraint) String() string {
 }
 
 func (c *PrimaryKeyConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ")
 	}
-	str += "PRIMARY KEY"
-	str += " ("
+	str.WriteString("PRIMARY KEY")
+	str.WriteString(" (")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	return str
+	str.WriteString(")")
+	return str.String()
 }
 
 // ForeignKeyConstraint represents a FOREIGN KEY constraint.
@@ -97,32 +97,32 @@ func (c *ForeignKeyConstraint) String() string {
 }
 
 func (c *ForeignKeyConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ")
 	}
-	str += "FOREIGN KEY"
-	str += " ("
+	str.WriteString("FOREIGN KEY")
+	str.WriteString(" (")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	str += " REFERENCES " + c.Ref.Name
-	str += " ("
+	str.WriteString(")")
+	str.WriteString(" REFERENCES " + c.Ref.Name)
+	str.WriteString(" (")
 	for i, v := range c.RefColumns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
+	str.WriteString(")")
 	if c.OnAction != "" {
-		str += " " + c.OnAction
+		str.WriteString(" " + c.OnAction)
 	}
-	return str
+	return str.String()
 }
 
 // UniqueConstraint represents a UNIQUE constraint. //diff:ignore-line-postgres-cockroach.
@@ -147,20 +147,20 @@ func (c *UniqueConstraint) String() string { //diff:ignore-line-postgres-cockroa
 }
 
 func (c *UniqueConstraint) StringForDiff() string { //diff:ignore-line-postgres-cockroach
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " " //diff:ignore-line-postgres-cockroach
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ") //diff:ignore-line-postgres-cockroach
 	}
-	str += "UNIQUE " //diff:ignore-line-postgres-cockroach
-	str += "("
+	str.WriteString("UNIQUE ") //diff:ignore-line-postgres-cockroach
+	str.WriteString("(")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	return str
+	str.WriteString(")")
+	return str.String()
 }
 
 // CheckConstraint represents a CHECK constraint.
@@ -185,18 +185,18 @@ func (c *CheckConstraint) String() string {
 }
 
 func (c *CheckConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ")
 	}
-	str += "CHECK "
+	str.WriteString("CHECK ")
 	for i, v := range c.Expr.Idents {
 		if i != 0 {
-			str += " "
+			str.WriteString(" ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	return str
+	return str.String()
 }
 
 func NewObjectName(name string) *ObjectName {
@@ -272,11 +272,11 @@ func (d *Expr) String() string {
 		return ""
 	}
 
-	var str string
+	var str strings.Builder
 	for i := range d.Idents {
 		switch {
 		case i != 0 && (d.Idents[i-1].String() == "||" || d.Idents[i].String() == "||"):
-			str += " "
+			str.WriteString(" ")
 		case i == 0 ||
 			d.Idents[i-1].String() == "(" || d.Idents[i].String() == "(" ||
 			d.Idents[i].String() == ")" ||
@@ -284,12 +284,12 @@ func (d *Expr) String() string {
 			d.Idents[i].String() == ",":
 			// noop
 		default:
-			str += " "
+			str.WriteString(" ")
 		}
-		str += d.Idents[i].String()
+		str.WriteString(d.Idents[i].String())
 	}
 
-	return str
+	return str.String()
 }
 
 func (d *Default) GoString() string { return internal.GoString(*d) }
@@ -309,14 +309,15 @@ func (d *Default) StringForDiff() string {
 		return ""
 	}
 	if e := d.Value; e != nil {
-		str := "DEFAULT "
+		var str strings.Builder
+		str.WriteString("DEFAULT ")
 		for i, v := range d.Value.Idents {
 			if i != 0 {
-				str += " "
+				str.WriteString(" ")
 			}
-			str += v.StringForDiff()
+			str.WriteString(v.StringForDiff())
 		}
-		return str
+		return str.String()
 	}
 	return ""
 }

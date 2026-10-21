@@ -33,10 +33,12 @@ func (t TokenType) String() string {
 //nolint:revive
 const (
 	// SPECIAL TOKENS.
+
 	TOKEN_ILLEGAL TokenType = "ILLEGAL"
 	TOKEN_EOF     TokenType = "EOF"
 
 	// SPECIAL CHARACTERS.
+
 	TOKEN_OPEN_PAREN      TokenType = "OPEN_PAREN"      // (
 	TOKEN_CLOSE_PAREN     TokenType = "CLOSE_PAREN"     // )
 	TOKEN_COMMA           TokenType = "COMMA"           // ,
@@ -53,6 +55,7 @@ const (
 	TOKEN_TYPE_ANNOTATION TokenType = "TYPE_ANNOTATION" // ::: //diff:ignore-line-postgres-cockroach
 
 	// VERB.
+
 	TOKEN_CREATE   TokenType = "CREATE"
 	TOKEN_ALTER    TokenType = "ALTER"
 	TOKEN_DROP     TokenType = "DROP"
@@ -62,11 +65,13 @@ const (
 	TOKEN_UPDATE   TokenType = "UPDATE"
 
 	// OBJECT.
+
 	TOKEN_TABLE TokenType = "TABLE"
 	TOKEN_INDEX TokenType = "INDEX"
 	TOKEN_VIEW  TokenType = "VIEW"
 
 	// OTHER.
+
 	TOKEN_IF     TokenType = "IF"
 	TOKEN_EXISTS TokenType = "EXISTS"
 	TOKEN_USING  TokenType = "USING"
@@ -74,6 +79,7 @@ const (
 	TOKEN_TO     TokenType = "TO"
 
 	// DATA TYPE.
+
 	TOKEN_BOOL              TokenType = "BOOL" //diff:ignore-line-postgres-cockroach
 	TOKEN_INT2              TokenType = "INT2" //diff:ignore-line-postgres-cockroach
 	TOKEN_INT4              TokenType = "INT4" //diff:ignore-line-postgres-cockroach
@@ -103,6 +109,7 @@ const (
 	TOKEN_ZONE              TokenType = "ZONE"
 
 	// COLUMN.
+
 	TOKEN_DEFAULT TokenType = "DEFAULT"
 	TOKEN_NOT     TokenType = "NOT"
 	TOKEN_VISIBLE TokenType = "VISIBLE"
@@ -116,6 +123,7 @@ const (
 	TOKEN_VIRTUAL TokenType = "VIRTUAL"
 
 	// CONSTRAINT.
+
 	TOKEN_CONSTRAINT TokenType = "CONSTRAINT"
 	TOKEN_PRIMARY    TokenType = "PRIMARY"
 	TOKEN_KEY        TokenType = "KEY"
@@ -125,14 +133,17 @@ const (
 	TOKEN_CHECK      TokenType = "CHECK"
 
 	// FUNCTION.
+
 	TOKEN_NULLIF TokenType = "NULLIF"
 
 	// VALUE.
+
 	TOKEN_NULL  TokenType = "NULL"
 	TOKEN_TRUE  TokenType = "TRUE"
 	TOKEN_FALSE TokenType = "FALSE"
 
 	// IDENTIFIER.
+
 	TOKEN_IDENT TokenType = "IDENT"
 )
 

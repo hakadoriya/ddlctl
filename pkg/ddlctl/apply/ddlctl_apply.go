@@ -169,7 +169,7 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 			}
 		}
 		commentTrimmedDDL := readLine(ddlStr, "\n", readLineFuncRemoveCommentLine("--"))
-		for _, q := range strings.Split(commentTrimmedDDL, ";\n") {
+		for q := range strings.SplitSeq(commentTrimmedDDL, ";\n") {
 			if len(q) == 0 {
 				// skip empty query
 				continue
@@ -195,14 +195,14 @@ func Apply(ctx context.Context, dialect, dsn, ddlStr string) error {
 }
 
 func readLine(content string, lineSeparator string, f func(line string, lineSeparator string, lastLine bool) (treated string)) string {
-	var result string
+	var result strings.Builder
 	lines := strings.Split(content, lineSeparator)
 	lastLine := len(lines) - 1
 	for i, line := range lines {
 		treated := f(line, lineSeparator, i == lastLine)
-		result += treated
+		result.WriteString(treated)
 	}
-	return result
+	return result.String()
 }
 
 func readLineFuncRemoveCommentLine(commentPrefix string) func(line string, lineSeparator string, lastLine bool) (treated string) {
@@ -266,7 +266,7 @@ func splitExec(
 				}
 
 				// If the error is not one of the above, error and log. go to the next DDL;
-				logs.Warn.Printf(err.Error())
+				logs.Warn.Print(err.Error())
 			}
 		}
 		if outerErr != nil {

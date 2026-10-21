@@ -64,21 +64,21 @@ func (c *PrimaryKeyConstraint) String() string {
 }
 
 func (c *PrimaryKeyConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	// MEMO: MySQL does not support naming PRIMARY KEY constraints.
 	// if c.Name != nil {
 	// 	str += "CONSTRAINT " + c.Name.StringForDiff() + " "
 	// }
-	str += "PRIMARY KEY"
-	str += " ("
+	str.WriteString("PRIMARY KEY")
+	str.WriteString(" (")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	return str
+	str.WriteString(")")
+	return str.String()
 }
 
 // ForeignKeyConstraint represents a FOREIGN KEY constraint.
@@ -108,29 +108,29 @@ func (c *ForeignKeyConstraint) String() string {
 }
 
 func (c *ForeignKeyConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ")
 	}
-	str += "FOREIGN KEY"
-	str += " ("
+	str.WriteString("FOREIGN KEY")
+	str.WriteString(" (")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	str += " REFERENCES " + c.Ref.Name
-	str += " ("
+	str.WriteString(")")
+	str.WriteString(" REFERENCES " + c.Ref.Name)
+	str.WriteString(" (")
 	for i, v := range c.RefColumns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	return str
+	str.WriteString(")")
+	return str.String()
 }
 
 // IndexConstraint represents a UNIQUE constraint..
@@ -158,22 +158,22 @@ func (c *IndexConstraint) String() string {
 }
 
 func (c *IndexConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Unique {
-		str += "UNIQUE "
+		str.WriteString("UNIQUE ")
 	}
 	if c.Name != nil {
-		str += "KEY " + c.Name.StringForDiff() + " "
+		str.WriteString("KEY " + c.Name.StringForDiff() + " ")
 	}
-	str += "("
+	str.WriteString("(")
 	for i, v := range c.Columns {
 		if i != 0 {
-			str += ", "
+			str.WriteString(", ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	str += ")"
-	return str
+	str.WriteString(")")
+	return str.String()
 }
 
 // CheckConstraint represents a CHECK constraint.
@@ -198,18 +198,18 @@ func (c *CheckConstraint) String() string {
 }
 
 func (c *CheckConstraint) StringForDiff() string {
-	var str string
+	var str strings.Builder
 	if c.Name != nil {
-		str += "CONSTRAINT " + c.Name.StringForDiff() + " "
+		str.WriteString("CONSTRAINT " + c.Name.StringForDiff() + " ")
 	}
-	str += "CHECK "
+	str.WriteString("CHECK ")
 	for i, v := range c.Expr.Idents {
 		if i != 0 {
-			str += " "
+			str.WriteString(" ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	return str
+	return str.String()
 }
 
 func NewObjectName(name string) *ObjectName {
@@ -290,7 +290,7 @@ func (d *Expr) String() string {
 		return ""
 	}
 
-	var str string
+	var str strings.Builder
 	for i := range d.Idents {
 		switch {
 		case i == 0 ||
@@ -301,12 +301,12 @@ func (d *Expr) String() string {
 			d.Idents[i].String() == ",":
 			// noop
 		default:
-			str += " "
+			str.WriteString(" ")
 		}
-		str += d.Idents[i].String()
+		str.WriteString(d.Idents[i].String())
 	}
 
-	return str
+	return str.String()
 }
 
 func (d *Default) GoString() string { return internal.GoString(*d) }
@@ -326,14 +326,15 @@ func (d *Default) StringForDiff() string {
 		return ""
 	}
 	if e := d.Value; e != nil {
-		str := "DEFAULT "
+		var str strings.Builder
+		str.WriteString("DEFAULT ")
 		for i, v := range d.Value.Idents {
 			if i != 0 {
-				str += " "
+				str.WriteString(" ")
 			}
-			str += v.StringForDiff()
+			str.WriteString(v.StringForDiff())
 		}
-		return str
+		return str.String()
 	}
 	return ""
 }
@@ -384,14 +385,14 @@ func (o *Option) StringForDiff() string {
 	if o == nil || o.Value == nil {
 		return ""
 	}
-	var str string
+	var str strings.Builder
 	for i, v := range o.Value.Idents {
 		if i != 0 {
-			str += " "
+			str.WriteString(" ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	return o.Name + "=" + str
+	return o.Name + "=" + str.String()
 }
 
 func (o *Option) GoString() string { return internal.GoString(*o) }
@@ -399,18 +400,18 @@ func (o *Option) GoString() string { return internal.GoString(*o) }
 type Options []*Option
 
 func (options Options) String() string {
-	var str string
+	var str strings.Builder
 	for i, v := range options {
 		if i != 0 {
-			str += " "
+			str.WriteString(" ")
 		}
-		str += v.String()
+		str.WriteString(v.String())
 	}
-	return str
+	return str.String()
 }
 
 func (options Options) StringForDiff() string {
-	var str string
+	var str strings.Builder
 
 	// NOTE: Maybe unnecessary?
 	opts := make(Options, len(options))
@@ -421,9 +422,9 @@ func (options Options) StringForDiff() string {
 
 	for i, v := range opts {
 		if i != 0 {
-			str += " "
+			str.WriteString(" ")
 		}
-		str += v.StringForDiff()
+		str.WriteString(v.StringForDiff())
 	}
-	return str
+	return str.String()
 }

@@ -21,21 +21,21 @@ func (s *DropTableStmt) GetNameForDiff() string {
 }
 
 func (s *DropTableStmt) String() string {
-	var str string
+	var str strings.Builder
 	if s.Comment != "" {
 		comments := strings.Split(s.Comment, "\n")
 		for i := range comments {
 			if comments[i] != "" {
-				str += CommentPrefix + comments[i] + "\n"
+				str.WriteString(CommentPrefix + comments[i] + "\n")
 			}
 		}
 	}
-	str += "DROP TABLE "
+	str.WriteString("DROP TABLE ")
 	if s.IfExists {
-		str += "IF EXISTS "
+		str.WriteString("IF EXISTS ")
 	}
-	str += s.Name.String() + ";\n"
-	return str
+	str.WriteString(s.Name.String() + ";\n")
+	return str.String()
 }
 
 func (*DropTableStmt) isStmt()            {}

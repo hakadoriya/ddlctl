@@ -3,6 +3,7 @@ package cockroachdb
 import (
 	"context"
 	"database/sql"
+	"strings"
 
 	"github.com/hakadoriya/z.go/databasez/sqlz"
 
@@ -10,7 +11,7 @@ import (
 )
 
 type sqlQueryerContext = interface {
-	QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
 }
 
 const (
@@ -20,7 +21,7 @@ SHOW CREATE ALL TABLES
 `
 )
 
-func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext) (query string, err error) {
+func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext) (string, error) {
 	dbz := sqlz.NewDB(db)
 
 	type CreateStatement struct {
@@ -31,9 +32,10 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext) (query strin
 	if err := dbz.QueryContext(ctx, createTableStmts, queryShowCreateAllTables); err != nil {
 		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
+	var query strings.Builder
 	for _, stmt := range *createTableStmts {
-		query += stmt.CreateStatement + "\n"
+		query.WriteString(stmt.CreateStatement + "\n")
 	}
 
-	return query, nil
+	return query.String(), nil
 }
