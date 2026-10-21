@@ -135,5 +135,5 @@ jobs:
         with:
           working-directory: ${{ env.WORKDIR }}
           args: --timeout=600s
-          version: latest # or v${{ env.GOLANGCI_LINT_VERSION }}
+          version: v${{ env.GOLANGCI_LINT_VERSION }} # .versenv.env で固定したバージョン
           skip-cache: true
