@@ -67,16 +67,28 @@ type showCreateAllTablesFixture map[string]map[string]*fakesql.Rows
 func (f showCreateAllTablesFixture) queryFunc(t *testing.T, tableNames []string, failQuery string, errQuery error) fakesql.QueryFunc {
 	t.Helper()
 
+	// インターリーブしていないテーブルとして返す
+	tables := &fakesql.Rows{Columns: tablesColumns}
+	for _, tableName := range tableNames {
+		tables.Values = append(tables.Values, []driver.Value{tableName, nil, nil, nil})
+	}
+	return f.queryFuncWithTables(t, tables, failQuery, errQuery)
+}
+
+// tablesColumns は querySelectTableName の結果のカラム
+var tablesColumns = []string{"TABLE_NAME", "PARENT_TABLE_NAME", "ON_DELETE_ACTION", "INTERLEAVE_TYPE"}
+
+// queryFuncWithTables は querySelectTableName に tables を返し、それ以外のクエリに fixture で応答する QueryFunc を返す。
+// failQuery に一致するクエリには errQuery を返す。
+func (f showCreateAllTablesFixture) queryFuncWithTables(t *testing.T, tables *fakesql.Rows, failQuery string, errQuery error) fakesql.QueryFunc {
+	t.Helper()
+
 	return func(query string, args []driver.NamedValue) (*fakesql.Rows, error) {
 		if query == failQuery {
 			return nil, errQuery
 		}
 		if query == querySelectTableName {
-			r := &fakesql.Rows{Columns: []string{"TABLE_NAME"}}
-			for _, tableName := range tableNames {
-				r.Values = append(r.Values, []driver.Value{tableName})
-			}
-			return r, nil
+			return tables, nil
 		}
 		// querySelectTableName 以外のクエリは全てテーブル名を唯一の引数に取る
 		require.Equal(t, 1, len(args))
@@ -421,6 +433,135 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 		}
 		if _, err := ddlspanner.Diff(before, changedAfter); err != nil {
 			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- changed\n%s", err, actual, changedDDL)
+			return false
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(property, nil))
+}
+
+func TestShowCreateAllTables_InterleaveInParentRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	// 1 データベースあたりのテーブル数の上限
+	const maxTables = 8
+
+	// 定義ファイル側の ON DELETE の書き方。NO ACTION は省略・大文字・小文字、CASCADE は大文字・小文字にゆらす
+	noActionSpellings := []string{"", " ON DELETE NO ACTION", " on delete no action"}
+	cascadeSpellings := []string{" ON DELETE CASCADE", " on delete cascade"}
+
+	// 各テーブルのインターリーブの種類 (なし / INTERLEAVE IN PARENT / INTERLEAVE IN) ・親テーブル・ ON DELETE の動作と定義ファイル側の書き方を生成し、
+	// ShowCreateAllTables の出力をパースした結果が、同じインターリーブを書いた DDL と差分なしになることを検証する。
+	// あわせて、INTERLEAVE IN PARENT のテーブルがあれば、そのうち 1 つの ON DELETE の動作を反転した DDL とは差分が出ることを検証する。
+	// 差分なしにならないと ddlctl diff / apply が毎回 DROP TABLE + CREATE TABLE を生成し、テーブルのデータが消える。
+	// 差分が出ないと、ON DELETE の動作の変更を見落とす。
+	// INTERLEAVE IN (PARENT なし) は pkg/ddl/spanner が未対応で定義ファイルに書けないため、ShowCreateAllTables も出力しないことを期待する。
+	property := func(specs []uint16, flip uint8) bool {
+		if len(specs) == 0 {
+			return true
+		}
+		if len(specs) > maxTables {
+			specs = specs[:maxTables]
+		}
+
+		tables := &fakesql.Rows{Columns: tablesColumns}
+		fixture := showCreateAllTablesFixture{}
+		// 各テーブルの INTERLEAVE IN PARENT 句と、ON DELETE の動作を反転した句
+		clauses := make([]string, len(specs))
+		flippedClauses := make([]string, len(specs))
+		interleavedInParent := make([]int, 0, len(specs))
+		for i, spec := range specs {
+			name := fmt.Sprintf("T%d", i)
+			kind := int(spec) % 3
+			if i == 0 {
+				// 先頭のテーブルには親にできるテーブルがない
+				kind = 0
+			}
+			parent := fmt.Sprintf("T%d", int(spec)/3%max(i, 1))
+			cascade := spec/(3*maxTables)%2 == 1
+			spelling := int(spec) / (3 * maxTables * 2) % (len(noActionSpellings) * len(cascadeSpellings))
+			// 親を持たないテーブルの INTERLEAVE_TYPE は NULL のことも "IN PARENT" のこともある (Cloud Spanner エミュレータでは "IN PARENT")
+			var rootInterleaveType driver.Value
+			if spec/(3*maxTables*2*6)%2 == 1 {
+				rootInterleaveType = "IN PARENT"
+			}
+
+			switch kind {
+			case 0:
+				tables.Values = append(tables.Values, []driver.Value{name, nil, nil, rootInterleaveType})
+			case 1:
+				noAction, cascadeClause := noActionSpellings[spelling%len(noActionSpellings)], cascadeSpellings[spelling%len(cascadeSpellings)]
+				action, clause, flippedClause := "NO ACTION", noAction, cascadeClause
+				if cascade {
+					action, clause, flippedClause = "CASCADE", cascadeClause, noAction
+				}
+				tables.Values = append(tables.Values, []driver.Value{name, parent, action, "IN PARENT"})
+				clauses[i] = ",\nINTERLEAVE IN PARENT " + parent + clause
+				flippedClauses[i] = ",\nINTERLEAVE IN PARENT " + parent + flippedClause
+				interleavedInParent = append(interleavedInParent, i)
+			default:
+				tables.Values = append(tables.Values, []driver.Value{name, parent, "NO ACTION", "IN"})
+			}
+
+			fixture[name] = map[string]*fakesql.Rows{
+				queryShowCreateAllTables: {Columns: []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"}, Values: [][]driver.Value{
+					{name, "Id", nil, "NO", "STRING(MAX)"},
+				}},
+				queryShowTableColumnOptions: {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
+				queryShowPrimaryKey: {Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}, Values: [][]driver.Value{
+					{"PRIMARY_KEY", "PRIMARY_KEY", "Id", "ASC", int64(1)},
+				}},
+				querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
+				querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+			}
+		}
+		// flipped 番目のテーブルだけ ON DELETE の動作を反転した DDL を返す。flipped が -1 なら反転しない
+		ddlOf := func(flipped int) string {
+			ddls := make([]string, 0, len(specs))
+			for i := range specs {
+				clause := clauses[i]
+				if i == flipped {
+					clause = flippedClauses[i]
+				}
+				ddls = append(ddls, fmt.Sprintf("CREATE TABLE T%d (\n    Id STRING(MAX) NOT NULL\n) PRIMARY KEY (Id)%s;\n", i, clause))
+			}
+			return strings.Join(ddls, "\n")
+		}
+		expected := ddlOf(-1)
+
+		db := fakesql.OpenDB(fixture.queryFuncWithTables(t, tables, "", nil))
+		defer func() { _ = db.Close() }()
+
+		actual, err := ShowCreateAllTables(context.Background(), db)
+		if err != nil {
+			t.Logf("ShowCreateAllTables: %v", err)
+			return false
+		}
+		before, err := ddlspanner.NewParser(ddlspanner.NewLexer(actual)).Parse()
+		if err != nil {
+			t.Logf("parse ShowCreateAllTables output: %v\n%s", err, actual)
+			return false
+		}
+		after, err := ddlspanner.NewParser(ddlspanner.NewLexer(expected)).Parse()
+		if err != nil {
+			t.Logf("parse expected DDL: %v\n%s", err, expected)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, after); !errors.Is(err, ddl.ErrNoDifference) {
+			t.Logf("unexpected difference: err=%v\n--- ShowCreateAllTables\n%s--- expected\n%s", err, actual, expected)
+			return false
+		}
+		if len(interleavedInParent) == 0 {
+			return true
+		}
+		flippedDDL := ddlOf(interleavedInParent[int(flip)%len(interleavedInParent)])
+		flippedAfter, err := ddlspanner.NewParser(ddlspanner.NewLexer(flippedDDL)).Parse()
+		if err != nil {
+			t.Logf("parse flipped DDL: %v\n%s", err, flippedDDL)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, flippedAfter); err != nil {
+			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- flipped\n%s", err, actual, flippedDDL)
 			return false
 		}
 		return true
