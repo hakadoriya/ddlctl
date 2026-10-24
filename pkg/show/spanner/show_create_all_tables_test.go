@@ -360,11 +360,9 @@ func TestShowCreateAllTables_InterleaveInParentRoundTrip(t *testing.T) {
 			parent := fmt.Sprintf("T%d", int(spec)/3%max(i, 1))
 			cascade := spec/(3*maxTables)%2 == 1
 			spelling := int(spec) / (3 * maxTables * 2) % (len(noActionSpellings) * len(cascadeSpellings))
-			// 親を持たないテーブルの INTERLEAVE_TYPE は NULL のことも "IN PARENT" のこともある (Cloud Spanner エミュレータでは "IN PARENT")
-			var rootInterleaveType driver.Value
-			if spec/(3*maxTables*2*6)%2 == 1 {
-				rootInterleaveType = "IN PARENT"
-			}
+			// 親を持たないテーブルの INTERLEAVE_TYPE は、Cloud Spanner のドキュメントでは空文字列、Cloud Spanner エミュレータでは "IN PARENT"。
+			// NULL でも INTERLEAVE IN PARENT を出力しないことをあわせて検証する
+			rootInterleaveType := []driver.Value{"", "IN PARENT", nil}[int(spec)/(3*maxTables*2*6)%3]
 
 			switch kind {
 			case 0:

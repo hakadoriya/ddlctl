@@ -41,8 +41,8 @@ const (
 //
 // INTERLEAVE IN PARENT を落とすと定義ファイルと食い違い、diff / apply が DROP TABLE + CREATE TABLE を生成してしまう。
 func writeInterleaveInParent(query *strings.Builder, tbl *informationSchemaTable) {
-	// NOTE: 親を持たないテーブルでも INTERLEAVE_TYPE が "IN PARENT" になることがある (Cloud Spanner エミュレータ 1.5.38 で確認) ので、
-	// PARENT_TABLE_NAME で判定する
+	// NOTE: 親を持たないテーブルの INTERLEAVE_TYPE は、Cloud Spanner のドキュメントでは空文字列だが、
+	// Cloud Spanner エミュレータ 1.5.38 では "IN PARENT" になる (実測) ので、PARENT_TABLE_NAME で判定する
 	if tbl.ParentTableName == nil {
 		return
 	}
