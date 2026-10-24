@@ -323,7 +323,7 @@ func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
 func TestShowCreateAllTables_InterleaveInParentRoundTrip(t *testing.T) {
 	t.Parallel()
 
-	// 1 データベースあたりのテーブル数の上限
+	// 生成するテーブル数の上限 (テストの規模を抑えるため。Cloud Spanner の上限ではない)
 	const maxTables = 8
 
 	// 定義ファイル側の ON DELETE の書き方。NO ACTION は省略・大文字・小文字、CASCADE は大文字・小文字にゆらす
@@ -441,6 +441,152 @@ func TestShowCreateAllTables_InterleaveInParentRoundTrip(t *testing.T) {
 		if _, err := ddlspanner.Diff(before, flippedAfter); err != nil {
 			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- flipped\n%s", err, actual, flippedDDL)
 			return false
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(property, nil))
+}
+
+// TestShowCreateAllTables_InterleaveInParent は INTERLEAVE IN PARENT 句の出力形式とテーブルの出力順を完全一致で検証する。
+// TestShowCreateAllTables_InterleaveInParentRoundTrip は出力をパースして比べるので、パーサーが受け付ける範囲の違い
+// (句の順序・ ON DELETE NO ACTION の明示・テーブルの順序) を検出できない。
+func TestShowCreateAllTables_InterleaveInParent(t *testing.T) {
+	t.Parallel()
+
+	columnColumns := []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"}
+	primaryKeyColumns := []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}
+	// tableOf は UserId と keyColumn を主キーに持つテーブルの fixture を返す。keyColumn が空なら UserId だけを主キーにする
+	tableOf := func(name, keyColumn string, rowDeletionPolicy ...driver.Value) map[string]*fakesql.Rows {
+		r := map[string]*fakesql.Rows{
+			queryShowCreateAllTables: {Columns: columnColumns, Values: [][]driver.Value{
+				{name, "UserId", nil, "NO", "STRING(36)"},
+			}},
+			queryShowTableColumnOptions: {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
+			queryShowPrimaryKey: {Columns: primaryKeyColumns, Values: [][]driver.Value{
+				{"PRIMARY_KEY", "PRIMARY_KEY", "UserId", "ASC", int64(1)},
+			}},
+			querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
+			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+		}
+		if keyColumn != "" {
+			r[queryShowCreateAllTables].Values = append(r[queryShowCreateAllTables].Values, []driver.Value{name, keyColumn, nil, "NO", "TIMESTAMP"})
+			r[queryShowPrimaryKey].Values = append(r[queryShowPrimaryKey].Values, []driver.Value{"PRIMARY_KEY", "PRIMARY_KEY", keyColumn, "ASC", int64(2)})
+		}
+		if len(rowDeletionPolicy) > 0 {
+			r[querySelectTableOptionRowDeletionPolicy].Values = [][]driver.Value{append([]driver.Value{name}, rowDeletionPolicy...)}
+		}
+		return r
+	}
+	fixture := showCreateAllTablesFixture{
+		"Users": tableOf("Users", ""),
+		// ON DELETE CASCADE と ROW DELETION POLICY を持つ子テーブル
+		"Logs": tableOf("Logs", "LoggedAt", "OLDER_THAN(LoggedAt, INTERVAL 30 DAY)"),
+		// ON DELETE を省略した (NO ACTION の) 子テーブル
+		"Sessions": tableOf("Sessions", "StartedAt"),
+		// PARENT なしの INTERLEAVE IN でインターリーブしたテーブル
+		"Archives": tableOf("Archives", "ArchivedAt"),
+	}
+	// INFORMATION_SCHEMA.TABLES は子テーブルを親テーブルより先に返すことがある (Cloud Spanner エミュレータで確認)
+	tables := &fakesql.Rows{Columns: tablesColumns, Values: [][]driver.Value{
+		{"Logs", "Users", "CASCADE", "IN PARENT"},
+		{"Sessions", "Users", "NO ACTION", "IN PARENT"},
+		{"Users", nil, nil, "IN PARENT"},
+		{"Archives", "Users", "NO ACTION", "IN"},
+	}}
+
+	db := fakesql.OpenDB(fixture.queryFuncWithTables(t, tables, "", nil))
+	t.Cleanup(func() { _ = db.Close() })
+
+	// INTERLEAVE IN PARENT は PRIMARY KEY と ROW DELETION POLICY の間に置く (Cloud Spanner は逆順の DDL を構文エラーにする)
+	const expected = `CREATE TABLE Users (
+    UserId STRING(36) NOT NULL
+) PRIMARY KEY (UserId);
+
+CREATE TABLE Logs (
+    UserId STRING(36) NOT NULL,
+    LoggedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (UserId, LoggedAt),
+INTERLEAVE IN PARENT Users ON DELETE CASCADE,
+ROW DELETION POLICY (OLDER_THAN(LoggedAt, INTERVAL 30 DAY));
+
+CREATE TABLE Sessions (
+    UserId STRING(36) NOT NULL,
+    StartedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (UserId, StartedAt),
+INTERLEAVE IN PARENT Users;
+
+CREATE TABLE Archives (
+    UserId STRING(36) NOT NULL,
+    ArchivedAt TIMESTAMP NOT NULL
+) PRIMARY KEY (UserId, ArchivedAt);
+`
+	actual, err := ShowCreateAllTables(context.Background(), db)
+	require.NoError(t, err)
+	assert.Equal(t, expected, actual)
+}
+
+func TestSortParentsFirst(t *testing.T) {
+	t.Parallel()
+
+	// 生成するテーブル数の上限 (テストの規模を抑えるため。Cloud Spanner の上限ではない)
+	const maxTables = 16
+
+	// 各テーブルの親 (なし / 自分より前に作ったテーブル / 一覧にないテーブル) と、INFORMATION_SCHEMA.TABLES が返す順序を生成し、
+	// sortParentsFirst の結果が入力の並べ替えであり、どの子テーブルも一覧にある親テーブルより後ろに来ることを検証する。
+	// 親テーブルが子テーブルより後ろにあると、show の出力を空のデータベースに apply したときに、
+	// 子テーブルの CREATE TABLE が親テーブルを見つけられずに失敗する。
+	property := func(parents []uint8, order []uint8) bool {
+		if len(parents) > maxTables {
+			parents = parents[:maxTables]
+		}
+
+		input := make([]*informationSchemaTable, 0, len(parents))
+		for i, p := range parents {
+			tbl := &informationSchemaTable{TableName: fmt.Sprintf("T%d", i)}
+			switch {
+			case p%4 == 3:
+				missing := "Missing"
+				tbl.ParentTableName = &missing
+			case i > 0 && p%2 == 1:
+				parent := fmt.Sprintf("T%d", int(p/4)%i)
+				tbl.ParentTableName = &parent
+			}
+			input = append(input, tbl)
+		}
+		// INFORMATION_SCHEMA.TABLES が返す順序として、order で作成順をシャッフルする
+		for i := len(input) - 1; i > 0 && len(order) > 0; i-- {
+			j := int(order[i%len(order)]) % (i + 1)
+			input[i], input[j] = input[j], input[i]
+		}
+
+		sorted := sortParentsFirst(input)
+
+		if len(sorted) != len(input) {
+			t.Logf("len(sorted)=%d, len(input)=%d", len(sorted), len(input))
+			return false
+		}
+		position := make(map[string]int, len(sorted))
+		for i, tbl := range sorted {
+			if _, duplicated := position[tbl.TableName]; duplicated {
+				t.Logf("duplicated table: %s", tbl.TableName)
+				return false
+			}
+			position[tbl.TableName] = i
+		}
+		for _, tbl := range input {
+			if _, ok := position[tbl.TableName]; !ok {
+				t.Logf("missing table: %s", tbl.TableName)
+				return false
+			}
+		}
+		for _, tbl := range sorted {
+			if tbl.ParentTableName == nil {
+				continue
+			}
+			if parentPosition, ok := position[*tbl.ParentTableName]; ok && parentPosition > position[tbl.TableName] {
+				t.Logf("parent %s comes after child %s", *tbl.ParentTableName, tbl.TableName)
+				return false
+			}
 		}
 		return true
 	}
