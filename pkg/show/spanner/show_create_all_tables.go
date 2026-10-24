@@ -19,11 +19,43 @@ type sqlQueryerContext = interface {
 }
 
 const (
-	querySelectTableName = `SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '';`
+	querySelectTableName = `SELECT TABLE_NAME, PARENT_TABLE_NAME, ON_DELETE_ACTION, INTERLEAVE_TYPE FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = '';`
 )
 
 type informationSchemaTable struct {
-	TableName string `db:"TABLE_NAME"`
+	// TABLES https://cloud.google.com/spanner/docs/information-schema?hl=ja#tables
+	TableName       string  `db:"TABLE_NAME"`
+	ParentTableName *string `db:"PARENT_TABLE_NAME"`
+	OnDeleteAction  *string `db:"ON_DELETE_ACTION"`
+	InterleaveType  *string `db:"INTERLEAVE_TYPE"`
+}
+
+const (
+	// interleaveTypeIn は PARENT なしの INTERLEAVE IN でインターリーブしたテーブルの INTERLEAVE_TYPE
+	interleaveTypeIn = "IN"
+	// onDeleteActionCascade は ON DELETE CASCADE を指定したテーブルの ON_DELETE_ACTION
+	onDeleteActionCascade = "CASCADE"
+)
+
+// writeInterleaveInParent は tbl が INTERLEAVE IN PARENT でインターリーブしていれば、その句を PRIMARY KEY 句に続けて query に書き込む。
+//
+// INTERLEAVE IN PARENT を落とすと定義ファイルと食い違い、diff / apply が DROP TABLE + CREATE TABLE を生成してしまう。
+func writeInterleaveInParent(query *strings.Builder, tbl *informationSchemaTable) {
+	// NOTE: 親を持たないテーブルでも INTERLEAVE_TYPE が "IN PARENT" になることがある (Cloud Spanner エミュレータ 1.5.38 で確認) ので、
+	// PARENT_TABLE_NAME で判定する
+	if tbl.ParentTableName == nil {
+		return
+	}
+	// NOTE: PARENT なしの INTERLEAVE IN は pkg/ddl/spanner のパーサーが未対応なので出力しない。
+	// 出力すると diff / apply が ShowCreateAllTables の出力をパースできずに失敗する
+	if tbl.InterleaveType != nil && *tbl.InterleaveType == interleaveTypeIn {
+		return
+	}
+	query.WriteString(",\nINTERLEAVE IN PARENT " + *tbl.ParentTableName)
+	// NOTE: NO ACTION は ON DELETE を省略したときの既定値なので CASCADE だけを出力する (pkg/ddl/spanner のパーサーも同じ形に揃える)
+	if tbl.OnDeleteAction != nil && *tbl.OnDeleteAction == onDeleteActionCascade {
+		query.WriteString(" ON DELETE " + onDeleteActionCascade)
+	}
 }
 
 const (
@@ -280,6 +312,8 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			}
 			query.WriteString(")")
 		}
+
+		writeInterleaveInParent(&query, tbl)
 
 		tableOptionRowDeletionPolicy := make([]*informationSchemaTableOptionRowDeletionPolicy, 0)
 		if err := dbz.QueryContext(ctx, &tableOptionRowDeletionPolicy, querySelectTableOptionRowDeletionPolicy, tbl.TableName); err != nil {
