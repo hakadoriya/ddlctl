@@ -157,10 +157,12 @@ FROM
 INNER JOIN
     INFORMATION_SCHEMA.INDEX_COLUMNS AS ic
 ON
-    i.TABLE_NAME = ic.TABLE_NAME
+    i.TABLE_SCHEMA = ic.TABLE_SCHEMA
+    AND i.TABLE_NAME = ic.TABLE_NAME
+    AND i.INDEX_NAME = ic.INDEX_NAME
 WHERE
-    i.TABLE_NAME = ? 
-    AND i.INDEX_TYPE != "PRIMARY_KEY" 
+    i.TABLE_NAME = ?
+    AND i.INDEX_TYPE != "PRIMARY_KEY"
     AND ic.INDEX_NAME != "PRIMARY_KEY" 
 ORDER BY
     i.TABLE_NAME, ic.INDEX_NAME, ic.ORDINAL_POSITION
@@ -302,26 +304,12 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			return "", apperr.Errorf("dbz.QueryContext: %w", err)
 		}
 
-		for _, indexName := range indexNames {
-			indexes := make([]*informationSchemaIndex, 0)
-			if err := dbz.QueryContext(ctx, &indexes, queryShowIndexes, tbl.TableName); err != nil {
+		if len(indexNames) > 0 {
+			allIndexColumns := make([]*informationSchemaIndex, 0)
+			if err := dbz.QueryContext(ctx, &allIndexColumns, queryShowIndexes, tbl.TableName); err != nil {
 				return "", apperr.Errorf("dbz.QueryContext: %w", err)
 			}
-
-			query.WriteString("CREATE ")
-			if indexName.IsUnique {
-				query.WriteString("UNIQUE ")
-			}
-			fmt.Fprintf(&query, "INDEX %s ON %s (", indexName.IndexName, tbl.TableName)
-
-			indexesLastIndex := len(indexes) - 1
-			for i, idx := range indexes {
-				query.WriteString(idx.ColumnName)
-				if i != indexesLastIndex {
-					query.WriteString(", ")
-				}
-			}
-			query.WriteString(");\n")
+			writeCreateIndexes(&query, tbl.TableName, indexNames, allIndexColumns)
 		}
 
 		if tblIdx != tablesLastIndex {
@@ -330,4 +318,25 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 	}
 
 	return query.String(), nil
+}
+
+// writeCreateIndexes は tableName のセカンダリインデックスごとの CREATE INDEX 文を query に書き込む。
+//
+// allIndexColumns は queryShowIndexes の結果で、テーブルの全インデックスのカラムを含むため、インデックス名で振り分けて使う。
+// 振り分けずに使うと、全インデックスのカラムが連結された CREATE INDEX を出力してしまう。
+func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*informationSchemaIndexName, allIndexColumns []*informationSchemaIndex) {
+	for _, indexName := range indexNames {
+		columnNames := make([]string, 0)
+		for _, idx := range allIndexColumns {
+			if idx.IndexName == indexName.IndexName {
+				columnNames = append(columnNames, idx.ColumnName)
+			}
+		}
+
+		query.WriteString("CREATE ")
+		if indexName.IsUnique {
+			query.WriteString("UNIQUE ")
+		}
+		fmt.Fprintf(query, "INDEX %s ON %s (%s);\n", indexName.IndexName, tableName, strings.Join(columnNames, ", "))
+	}
 }
