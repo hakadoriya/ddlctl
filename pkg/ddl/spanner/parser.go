@@ -241,21 +241,21 @@ LabelTableOptions:
 				if err := p.checkCurrentToken(TOKEN_DELETE); err != nil {
 					return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 				}
-				onAction := "ON DELETE"
 				p.nextToken()                // current = CASCADE or NO
 				switch p.currentToken.Type { //nolint:exhaustive
 				case TOKEN_CASCADE:
-					onAction += " CASCADE"
+					opt.Value = opt.Value.Append(NewRawIdent("ON DELETE CASCADE"))
 				case TOKEN_NO:
 					p.nextToken() // current = ACTION
 					if err := p.checkCurrentToken(TOKEN_ACTION); err != nil {
 						return nil, apperr.Errorf(errFmtPrefix+"checkCurrentToken: %w", err)
 					}
-					onAction += " NO ACTION"
+					// NOTE: NO ACTION は ON DELETE を省略したときの既定値なので、省略した形に揃える。
+					// INTERLEAVE IN PARENT は Options.StringForDiff の文字列で比べるので、揃えないと
+					// ON DELETE NO ACTION の明示と省略の違いだけで DROP TABLE + CREATE TABLE になる
 				default:
 					return nil, apperr.Errorf(errFmtPrefix+"currentToken=%#v, peekToken=%#v: %w", p.currentToken, p.peekToken, ddl.ErrUnexpectedCurrentToken)
 				}
-				opt.Value = opt.Value.Append(NewRawIdent(onAction))
 			}
 			createTableStmt.Options = append(createTableStmt.Options, opt)
 		case TOKEN_ROW:

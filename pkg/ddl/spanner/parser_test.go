@@ -41,7 +41,7 @@ CREATE TABLE "users" (
     CONSTRAINT users_age_check CHECK ("age" >= 0),
     CONSTRAINT users_group_id_fkey FOREIGN KEY (group_id) REFERENCES "groups" ("id")
 ) PRIMARY KEY ("id"),
-INTERLEAVE IN PARENT names ON DELETE NO ACTION,
+INTERLEAVE IN PARENT names,
 ROW DELETION POLICY (OLDER_THAN(ExpiredDate, INTERVAL 0 DAY));
 `
 
@@ -570,5 +570,16 @@ func TestParser_Parse_PrimaryKeyOrder(t *testing.T) {
 	require.NoError(t, err)
 
 	expected := "CREATE TABLE T (\n    A STRING(36) NOT NULL,\n    b STRING(36) NOT NULL,\n    `C` STRING(36) NOT NULL\n) PRIMARY KEY (A, b DESC, `C` DESC);\n"
+	assert.Equal(t, expected, actual.String())
+}
+
+func TestParser_Parse_InterleaveInParent(t *testing.T) {
+	t.Parallel()
+
+	// ON DELETE は CASCADE だけを大文字で出力し、既定値の NO ACTION は省略する
+	actual, err := NewParser(NewLexer("CREATE TABLE C (Id STRING(36) NOT NULL) PRIMARY KEY (Id), INTERLEAVE IN PARENT `P` on delete cascade; CREATE TABLE D (Id STRING(36) NOT NULL) PRIMARY KEY (Id), interleave in parent P On Delete No Action;")).Parse()
+	require.NoError(t, err)
+
+	expected := "CREATE TABLE C (\n    Id STRING(36) NOT NULL\n) PRIMARY KEY (Id),\nINTERLEAVE IN PARENT `P` ON DELETE CASCADE;\nCREATE TABLE D (\n    Id STRING(36) NOT NULL\n) PRIMARY KEY (Id),\nINTERLEAVE IN PARENT P;\n"
 	assert.Equal(t, expected, actual.String())
 }

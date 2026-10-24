@@ -1,6 +1,7 @@
 package spanner
 
 import (
+	"errors"
 	"testing"
 
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
@@ -720,5 +721,70 @@ func TestDiffCreateTable_PrimaryKeyOrder(t *testing.T) {
 			_, isCreate := actual.Stmts[1].(*CreateTableStmt)
 			assert.True(t, isCreate)
 		})
+	}
+}
+
+func TestDiffCreateTable_InterleaveInParent(t *testing.T) {
+	t.Parallel()
+
+	// INTERLEAVE IN PARENT 句の書き方と、その意味 (親テーブル名と ON DELETE の動作)
+	type interleave struct {
+		clause  string
+		meaning string
+	}
+	parents := []struct{ raw, name string }{{"P", "P"}, {"`P`", "P"}, {"Q", "Q"}}
+	onDeletes := []struct{ raw, action string }{
+		// ON DELETE を省略したときの動作は NO ACTION
+		{"", "NO ACTION"},
+		{" ON DELETE NO ACTION", "NO ACTION"},
+		{" on delete no action", "NO ACTION"},
+		{" ON DELETE CASCADE", "CASCADE"},
+		{" on Delete Cascade", "CASCADE"},
+	}
+	interleaves := make([]interleave, 0, 1+len(parents)*len(onDeletes))
+	interleaves = append(interleaves, interleave{clause: "", meaning: "not interleaved"})
+	for _, parent := range parents {
+		for _, onDelete := range onDeletes {
+			interleaves = append(interleaves, interleave{
+				clause:  ",\nINTERLEAVE IN PARENT " + parent.raw + onDelete.raw,
+				meaning: parent.name + " ON DELETE " + onDelete.action,
+			})
+		}
+	}
+
+	parse := func(t *testing.T, clause string) *CreateTableStmt {
+		t.Helper()
+
+		parsed, err := NewParser(NewLexer("CREATE TABLE T (Id STRING(36) NOT NULL) PRIMARY KEY (Id)" + clause + ";")).Parse()
+		require.NoError(t, err)
+		//nolint:forcetypeassert
+		return parsed.Stmts[0].(*CreateTableStmt)
+	}
+
+	// 全ての書き方の組について、意味が同じなら差分なし、意味が違えば DROP TABLE + CREATE TABLE になることを検証する。
+	// 書き方の違いだけで差分が出ると、ddlctl diff / apply が毎回 DROP TABLE + CREATE TABLE を生成し、テーブルのデータが消える。
+	for _, before := range interleaves {
+		for _, after := range interleaves {
+			actual, err := DiffCreateTable(parse(t, before.clause), parse(t, after.clause), DiffCreateTableUseAlterTableAddConstraintNotValid(false))
+			if before.meaning == after.meaning {
+				if !errors.Is(err, ddl.ErrNoDifference) {
+					t.Errorf("expected no difference: before=%q, after=%q: err=%v\n%s", before.clause, after.clause, err, actual)
+				}
+				continue
+			}
+			if err != nil {
+				t.Errorf("expected DROP TABLE + CREATE TABLE: before=%q, after=%q: err=%v", before.clause, after.clause, err)
+				continue
+			}
+			if len(actual.Stmts) != 2 {
+				t.Errorf("expected DROP TABLE + CREATE TABLE: before=%q, after=%q:\n%s", before.clause, after.clause, actual)
+				continue
+			}
+			_, isDrop := actual.Stmts[0].(*DropTableStmt)
+			_, isCreate := actual.Stmts[1].(*CreateTableStmt)
+			if !isDrop || !isCreate {
+				t.Errorf("expected DROP TABLE + CREATE TABLE: before=%q, after=%q:\n%s", before.clause, after.clause, actual)
+			}
+		}
 	}
 }
