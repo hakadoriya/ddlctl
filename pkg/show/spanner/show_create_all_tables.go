@@ -37,6 +37,40 @@ const (
 	onDeleteActionCascade = "CASCADE"
 )
 
+// sortParentsFirst は、親テーブルが子テーブルより前に来るように tables を並べ替えた slice を返す。
+// 親子関係のないテーブル同士は元の順序を保つ。一覧にない親テーブルは無視する。
+//
+// INFORMATION_SCHEMA.TABLES は子テーブルを親テーブルより先に返すことがある (Cloud Spanner エミュレータで確認)。
+// その順のまま INTERLEAVE IN PARENT を出力すると、ShowCreateAllTables の出力を空のデータベースに適用したときに、
+// 子テーブルの CREATE TABLE が親テーブルを見つけられずに失敗する。
+func sortParentsFirst(tables []*informationSchemaTable) []*informationSchemaTable {
+	byName := make(map[string]*informationSchemaTable, len(tables))
+	for _, tbl := range tables {
+		byName[tbl.TableName] = tbl
+	}
+
+	sorted := make([]*informationSchemaTable, 0, len(tables))
+	visited := make(map[string]bool, len(tables))
+	var visit func(tbl *informationSchemaTable)
+	visit = func(tbl *informationSchemaTable) {
+		// NOTE: 親を辿る前に訪問済みにするので、仮に親子関係が循環していても無限に再帰しない
+		if visited[tbl.TableName] {
+			return
+		}
+		visited[tbl.TableName] = true
+		if tbl.ParentTableName != nil {
+			if parent, ok := byName[*tbl.ParentTableName]; ok {
+				visit(parent)
+			}
+		}
+		sorted = append(sorted, tbl)
+	}
+	for _, tbl := range tables {
+		visit(tbl)
+	}
+	return sorted
+}
+
 // writeInterleaveInParent は tbl が INTERLEAVE IN PARENT でインターリーブしていれば、その句を PRIMARY KEY 句に続けて query に書き込む。
 //
 // INTERLEAVE IN PARENT を落とすと定義ファイルと食い違い、diff / apply が DROP TABLE + CREATE TABLE を生成してしまう。
@@ -239,6 +273,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 	if err := dbz.QueryContext(ctx, &tables, querySelectTableName); err != nil {
 		return "", apperr.Errorf("dbz.QueryContext: %w", err)
 	}
+	tables = sortParentsFirst(tables)
 
 	var query strings.Builder
 	tablesLastIndex := len(tables) - 1
