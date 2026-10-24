@@ -145,33 +145,27 @@ type informationSchemaIndexName struct {
 }
 
 const (
+	// NOTE: INDEX_COLUMNS 自身が INDEX_TYPE を持つので INDEXES とは JOIN しない。
+	// JOIN すると、JOIN キーを 1 つでも取りこぼしたときに各カラムがインデックスの数だけ重複し、しかも fake driver のテストでは検出できない。
 	queryShowIndexes = `-- SHOW INDEXES
 SELECT
-    ic.INDEX_NAME,
-    i.INDEX_TYPE,
-    ic.COLUMN_NAME,
-    ic.COLUMN_ORDERING,
-    ic.ORDINAL_POSITION
+    INDEX_NAME,
+    INDEX_TYPE,
+    COLUMN_NAME,
+    COLUMN_ORDERING,
+    ORDINAL_POSITION
 FROM
-    INFORMATION_SCHEMA.INDEXES AS i
-INNER JOIN
-    INFORMATION_SCHEMA.INDEX_COLUMNS AS ic
-ON
-    i.TABLE_SCHEMA = ic.TABLE_SCHEMA
-    AND i.TABLE_NAME = ic.TABLE_NAME
-    AND i.INDEX_NAME = ic.INDEX_NAME
+    INFORMATION_SCHEMA.INDEX_COLUMNS
 WHERE
-    i.TABLE_NAME = ?
-    AND i.INDEX_TYPE != "PRIMARY_KEY"
-    AND ic.INDEX_NAME != "PRIMARY_KEY" 
+    TABLE_NAME = ?
+    AND INDEX_TYPE != "PRIMARY_KEY"
 ORDER BY
-    i.TABLE_NAME, ic.INDEX_NAME, ic.ORDINAL_POSITION
+    INDEX_NAME, ORDINAL_POSITION
 ;
 `
 )
 
 type informationSchemaIndex struct {
-	// INDEXES https://cloud.google.com/spanner/docs/information-schema?hl=ja#indexes
 	// INDEX_COLUMNS https://cloud.google.com/spanner/docs/information-schema?hl=ja#index_columns
 	IndexName       string `db:"INDEX_NAME"`
 	IndexType       string `db:"INDEX_TYPE"`
