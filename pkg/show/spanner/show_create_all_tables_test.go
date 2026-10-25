@@ -307,3 +307,123 @@ func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
 	}
 	require.NoError(t, quick.Check(property, nil))
 }
+
+func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
+	t.Parallel()
+
+	const (
+		// インデックスに使えるカラムの数
+		numIndexableColumns = 16
+		// 1 テーブルあたりのインデックス数の上限
+		maxIndexes = 8
+		// 1 インデックスあたりのカラム数の上限
+		maxIndexColumns = 4
+	)
+
+	// テーブルに張るインデックスの組 (インデックス数と、各インデックスのカラム数・先頭カラム・ UNIQUE の有無) を生成し、
+	// ShowCreateAllTables の出力をパースした結果が、同じインデックスを書いた DDL と差分なしになることを検証する。
+	// あわせて、インデックスがあれば、そのうち 1 つのカラムを 1 つ別のカラムに変えた DDL とは差分が出ることを検証する。
+	// 差分なしにならないと ddlctl diff / apply が毎回 DROP INDEX + CREATE INDEX を生成する。
+	// 差分が出ないと、インデックスのカラムの変更を見落とす。
+	// NOTE: インデックス数を specs の長さで決めると、testing/quick はスライスの長さを 0 から 49 で一様に選ぶため、ほとんどが上限に切り詰められる。
+	// インデックス数は別の引数で 0 から maxIndexes まで一様に選ぶ。
+	property := func(n uint8, allSpecs [maxIndexes]uint16, changed uint8) bool {
+		specs := allSpecs[:int(n)%(maxIndexes+1)]
+
+		columns := &fakesql.Rows{
+			Columns: []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"},
+			Values:  [][]driver.Value{{"T", "Id", nil, "NO", "STRING(MAX)"}},
+		}
+		columnDefs := make([]string, 0, 1+numIndexableColumns)
+		columnDefs = append(columnDefs, "    Id STRING(MAX) NOT NULL")
+		for i := range numIndexableColumns {
+			name := fmt.Sprintf("Col%d", i)
+			columns.Values = append(columns.Values, []driver.Value{"T", name, nil, "YES", "STRING(MAX)"})
+			columnDefs = append(columnDefs, "    "+name+" STRING(MAX)")
+		}
+
+		indexNames := &fakesql.Rows{Columns: []string{"INDEX_NAME", "IS_UNIQUE"}}
+		// 実際の queryShowIndexes と同じく、テーブルの全インデックスのカラムを INDEX_NAME ・ ORDINAL_POSITION の順に返す
+		indexColumns := &fakesql.Rows{Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}}
+		indexDDLs := make([]string, 0, len(specs))
+		changedIndexDDLs := make([]string, 0, len(specs))
+		changedIndex := -1
+		if len(specs) > 0 {
+			changedIndex = int(changed) % len(specs)
+		}
+		for i, spec := range specs {
+			name := fmt.Sprintf("Idx%d", i)
+			numColumns := int(spec)%maxIndexColumns + 1
+			firstColumn := int(spec) / maxIndexColumns % numIndexableColumns
+			unique := spec/(maxIndexColumns*numIndexableColumns)%2 == 1
+
+			indexNames.Values = append(indexNames.Values, []driver.Value{name, unique})
+			columnNames := make([]string, 0, numColumns)
+			for j := range numColumns {
+				columnName := fmt.Sprintf("Col%d", (firstColumn+j)%numIndexableColumns)
+				indexColumns.Values = append(indexColumns.Values, []driver.Value{name, "INDEX", columnName, "ASC", int64(j + 1)})
+				columnNames = append(columnNames, columnName)
+			}
+			createIndex := "CREATE INDEX "
+			if unique {
+				createIndex = "CREATE UNIQUE INDEX "
+			}
+			indexDDLs = append(indexDDLs, createIndex+name+" ON T ("+strings.Join(columnNames, ", ")+");\n")
+			if i == changedIndex {
+				// 先頭のカラムを、このインデックスに含まれないカラム (numColumns < numIndexableColumns なので必ずある) に変える
+				columnNames[0] = fmt.Sprintf("Col%d", (firstColumn+numColumns)%numIndexableColumns)
+			}
+			changedIndexDDLs = append(changedIndexDDLs, createIndex+name+" ON T ("+strings.Join(columnNames, ", ")+");\n")
+		}
+		tableDDL := "CREATE TABLE T (\n" + strings.Join(columnDefs, ",\n") + "\n) PRIMARY KEY (Id);\n"
+		expected := tableDDL + strings.Join(indexDDLs, "")
+		changedDDL := tableDDL + strings.Join(changedIndexDDLs, "")
+
+		fixture := showCreateAllTablesFixture{"T": {
+			queryShowCreateAllTables:    columns,
+			queryShowTableColumnOptions: {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
+			queryShowPrimaryKey: {Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}, Values: [][]driver.Value{
+				{"PRIMARY_KEY", "PRIMARY_KEY", "Id", "ASC", int64(1)},
+			}},
+			querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
+			querySelectIndexes:                      indexNames,
+			queryShowIndexes:                        indexColumns,
+		}}
+		db := fakesql.OpenDB(fixture.queryFunc(t, []string{"T"}, "", nil))
+		defer func() { _ = db.Close() }()
+
+		actual, err := ShowCreateAllTables(context.Background(), db)
+		if err != nil {
+			t.Logf("ShowCreateAllTables: %v", err)
+			return false
+		}
+		before, err := ddlspanner.NewParser(ddlspanner.NewLexer(actual)).Parse()
+		if err != nil {
+			t.Logf("parse ShowCreateAllTables output: %v\n%s", err, actual)
+			return false
+		}
+		after, err := ddlspanner.NewParser(ddlspanner.NewLexer(expected)).Parse()
+		if err != nil {
+			t.Logf("parse expected DDL: %v\n%s", err, expected)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, after); !errors.Is(err, ddl.ErrNoDifference) {
+			t.Logf("unexpected difference: err=%v\n--- ShowCreateAllTables\n%s--- expected\n%s", err, actual, expected)
+			return false
+		}
+		if changedIndex < 0 {
+			return true
+		}
+		changedAfter, err := ddlspanner.NewParser(ddlspanner.NewLexer(changedDDL)).Parse()
+		if err != nil {
+			t.Logf("parse changed DDL: %v\n%s", err, changedDDL)
+			return false
+		}
+		if _, err := ddlspanner.Diff(before, changedAfter); err != nil {
+			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- changed\n%s", err, actual, changedDDL)
+			return false
+		}
+		return true
+	}
+	require.NoError(t, quick.Check(property, nil))
+}
