@@ -389,17 +389,25 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 // 振り分けずに使うと、全インデックスのカラムが連結された CREATE INDEX を出力してしまう。
 func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*informationSchemaIndexName, allIndexColumns []*informationSchemaIndex) {
 	for _, indexName := range indexNames {
-		columnNames := make([]string, 0)
+		// カラム名と並び順 (例: "CreatedAt DESC")
+		columns := make([]string, 0)
 		for _, idx := range allIndexColumns {
-			if idx.IndexName == indexName.IndexName {
-				columnNames = append(columnNames, idx.ColumnName)
+			if idx.IndexName != indexName.IndexName {
+				continue
 			}
+			// NOTE: 主キーと同じく、ASC は省略時の既定値なので DESC だけを出力する。
+			// DESC を落とすと定義ファイルのインデックスと食い違い、diff / apply が毎回 DROP INDEX + CREATE INDEX を生成してしまう。
+			column := idx.ColumnName
+			if idx.ColumnOrdering == columnOrderingDesc {
+				column += " " + columnOrderingDesc
+			}
+			columns = append(columns, column)
 		}
 
 		query.WriteString("CREATE ")
 		if indexName.IsUnique {
 			query.WriteString("UNIQUE ")
 		}
-		fmt.Fprintf(query, "INDEX %s ON %s (%s);\n", indexName.IndexName, tableName, strings.Join(columnNames, ", "))
+		fmt.Fprintf(query, "INDEX %s ON %s (%s);\n", indexName.IndexName, tableName, strings.Join(columns, ", "))
 	}
 }
