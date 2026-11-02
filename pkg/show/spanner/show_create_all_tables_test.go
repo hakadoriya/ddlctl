@@ -5,6 +5,7 @@ import (
 	"database/sql/driver"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 	"testing"
 	"testing/quick"
@@ -332,14 +333,18 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 		maxIndexColumns = 4
 	)
 
-	// テーブルに張るインデックスの組 (インデックス数と、各インデックスのカラム数・先頭カラム・ UNIQUE の有無) を生成し、
+	// 定義ファイル側の並び順の書き方。ASC は省略・明示・小文字、DESC は大文字・小文字・先頭だけ大文字にゆらす
+	ascSpellings := []string{"", " ASC", " asc"}
+	descSpellings := []string{" DESC", " desc", " Desc"}
+
+	// テーブルに張るインデックスの組 (インデックス数と、各インデックスのカラム数・先頭カラム・ UNIQUE の有無・各カラムの並び順と定義ファイル側の書き方) を生成し、
 	// ShowCreateAllTables の出力をパースした結果が、同じインデックスを書いた DDL と差分なしになることを検証する。
-	// あわせて、インデックスがあれば、そのうち 1 つのカラムを 1 つ別のカラムに変えた DDL とは差分が出ることを検証する。
+	// あわせて、インデックスがあれば、そのうち 1 つについて、カラムを 1 つ別のカラムに変えた DDL とも、1 カラムだけ並び順を反転した DDL とも差分が出ることを検証する。
 	// 差分なしにならないと ddlctl diff / apply が毎回 DROP INDEX + CREATE INDEX を生成する。
-	// 差分が出ないと、インデックスのカラムの変更を見落とす。
+	// 差分が出ないと、インデックスのカラムや並び順の変更を見落とす。
 	// NOTE: インデックス数を specs の長さで決めると、testing/quick はスライスの長さを 0 から 49 で一様に選ぶため、ほとんどが上限に切り詰められる。
 	// インデックス数は別の引数で 0 から maxIndexes まで一様に選ぶ。
-	property := func(n uint8, allSpecs [maxIndexes]uint16, changed uint8) bool {
+	property := func(n uint8, allSpecs [maxIndexes]uint16, allOrderings [maxIndexes][maxIndexColumns]uint8, changed, flip uint8) bool {
 		specs := allSpecs[:int(n)%(maxIndexes+1)]
 
 		columns := &fakesql.Rows{
@@ -359,6 +364,7 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 		indexColumns := &fakesql.Rows{Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}}
 		indexDDLs := make([]string, 0, len(specs))
 		changedIndexDDLs := make([]string, 0, len(specs))
+		flippedIndexDDLs := make([]string, 0, len(specs))
 		changedIndex := -1
 		if len(specs) > 0 {
 			changedIndex = int(changed) % len(specs)
@@ -370,26 +376,55 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 			unique := spec/(maxIndexColumns*numIndexableColumns)%2 == 1
 
 			indexNames.Values = append(indexNames.Values, []driver.Value{name, unique})
+			// 各カラムの名前と、定義ファイル側の並び順の書き方、およびその並び順を反転した書き方
 			columnNames := make([]string, 0, numColumns)
+			orderings := make([]string, 0, numColumns)
+			flippedOrderings := make([]string, 0, numColumns)
 			for j := range numColumns {
 				columnName := fmt.Sprintf("Col%d", (firstColumn+j)%numIndexableColumns)
-				indexColumns.Values = append(indexColumns.Values, []driver.Value{name, "INDEX", columnName, "ASC", int64(j + 1)})
+				desc := allOrderings[i][j]%2 == 1
+				spelling := int(allOrderings[i][j]/2) % len(ascSpellings)
+				columnOrdering, ordering, flippedOrdering := "ASC", ascSpellings[spelling], descSpellings[spelling]
+				if desc {
+					columnOrdering, ordering, flippedOrdering = "DESC", descSpellings[spelling], ascSpellings[spelling]
+				}
+				indexColumns.Values = append(indexColumns.Values, []driver.Value{name, "INDEX", columnName, columnOrdering, int64(j + 1)})
 				columnNames = append(columnNames, columnName)
+				orderings = append(orderings, ordering)
+				flippedOrderings = append(flippedOrderings, flippedOrdering)
 			}
-			createIndex := "CREATE INDEX "
-			if unique {
-				createIndex = "CREATE UNIQUE INDEX "
+			createIndexOf := func(columnNames, orderings []string) string {
+				createIndex := "CREATE INDEX "
+				if unique {
+					createIndex = "CREATE UNIQUE INDEX "
+				}
+				parts := make([]string, 0, len(columnNames))
+				for j := range columnNames {
+					parts = append(parts, columnNames[j]+orderings[j])
+				}
+				return createIndex + name + " ON T (" + strings.Join(parts, ", ") + ");\n"
 			}
-			indexDDLs = append(indexDDLs, createIndex+name+" ON T ("+strings.Join(columnNames, ", ")+");\n")
-			if i == changedIndex {
-				// 先頭のカラムを、このインデックスに含まれないカラム (numColumns < numIndexableColumns なので必ずある) に変える
-				columnNames[0] = fmt.Sprintf("Col%d", (firstColumn+numColumns)%numIndexableColumns)
+			indexDDL := createIndexOf(columnNames, orderings)
+			indexDDLs = append(indexDDLs, indexDDL)
+			if i != changedIndex {
+				changedIndexDDLs = append(changedIndexDDLs, indexDDL)
+				flippedIndexDDLs = append(flippedIndexDDLs, indexDDL)
+				continue
 			}
-			changedIndexDDLs = append(changedIndexDDLs, createIndex+name+" ON T ("+strings.Join(columnNames, ", ")+");\n")
+			// 先頭のカラムを、このインデックスに含まれないカラム (numColumns < numIndexableColumns なので必ずある) に変える
+			changedColumnNames := slices.Clone(columnNames)
+			changedColumnNames[0] = fmt.Sprintf("Col%d", (firstColumn+numColumns)%numIndexableColumns)
+			changedIndexDDLs = append(changedIndexDDLs, createIndexOf(changedColumnNames, orderings))
+			// 1 カラムだけ並び順を反転する
+			flipped := int(flip) % numColumns
+			flippedColumnOrderings := slices.Clone(orderings)
+			flippedColumnOrderings[flipped] = flippedOrderings[flipped]
+			flippedIndexDDLs = append(flippedIndexDDLs, createIndexOf(columnNames, flippedColumnOrderings))
 		}
 		tableDDL := "CREATE TABLE T (\n" + strings.Join(columnDefs, ",\n") + "\n) PRIMARY KEY (Id);\n"
 		expected := tableDDL + strings.Join(indexDDLs, "")
 		changedDDL := tableDDL + strings.Join(changedIndexDDLs, "")
+		flippedDDL := tableDDL + strings.Join(flippedIndexDDLs, "")
 
 		fixture := showCreateAllTablesFixture{"T": {
 			queryShowCreateAllTables:    columns,
@@ -426,14 +461,16 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 		if changedIndex < 0 {
 			return true
 		}
-		changedAfter, err := ddlspanner.NewParser(ddlspanner.NewLexer(changedDDL)).Parse()
-		if err != nil {
-			t.Logf("parse changed DDL: %v\n%s", err, changedDDL)
-			return false
-		}
-		if _, err := ddlspanner.Diff(before, changedAfter); err != nil {
-			t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- changed\n%s", err, actual, changedDDL)
-			return false
+		for _, variant := range []struct{ name, ddl string }{{"changed", changedDDL}, {"flipped", flippedDDL}} {
+			variantAfter, err := ddlspanner.NewParser(ddlspanner.NewLexer(variant.ddl)).Parse()
+			if err != nil {
+				t.Logf("parse %s DDL: %v\n%s", variant.name, err, variant.ddl)
+				return false
+			}
+			if _, err := ddlspanner.Diff(before, variantAfter); err != nil {
+				t.Logf("expected a difference: err=%v\n--- ShowCreateAllTables\n%s--- %s\n%s", err, actual, variant.name, variant.ddl)
+				return false
+			}
 		}
 		return true
 	}
