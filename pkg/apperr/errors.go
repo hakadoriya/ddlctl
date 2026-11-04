@@ -13,6 +13,7 @@ var (
 	ErrTwoArgumentsRequired               = errors.New("two arguments required")
 	ErrBothArgumentsIsDSN                 = errors.New("both arguments is dsn")
 	ErrBothArgumentsAreNotDSNOrSQLFile    = errors.New("both arguments are not dsn or sql file")
+	ErrUnexpectedColumnOrdering           = errors.New("unexpected column ordering")
 )
 
 //nolint:gochecknoglobals
