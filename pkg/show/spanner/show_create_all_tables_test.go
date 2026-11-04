@@ -13,6 +13,7 @@ import (
 	assert "github.com/hakadoriya/z.go/testingz/assertz"
 	require "github.com/hakadoriya/z.go/testingz/requirez"
 
+	"github.com/hakadoriya/ddlctl/pkg/apperr"
 	"github.com/hakadoriya/ddlctl/pkg/ddl"
 	ddlspanner "github.com/hakadoriya/ddlctl/pkg/ddl/spanner"
 	"github.com/hakadoriya/ddlctl/pkg/internal/fakesql"
@@ -223,6 +224,51 @@ CREATE INDEX LogsByUserIdLoggedAt ON Logs (UserId, LoggedAt DESC);
 
 			_, err := ShowCreateAllTables(context.Background(), db)
 			require.ErrorIs(t, err, errQuery)
+		})
+	}
+}
+
+func TestShowCreateAllTables_UnexpectedColumnOrdering(t *testing.T) {
+	t.Parallel()
+
+	// 主キーかインデックスのカラムの COLUMN_ORDERING が ASC でも DESC でもないとき、並び順を ASC として出力せずにエラーを返すことを検証する。
+	// Cloud Spanner の INFORMATION_SCHEMA が返すのは大文字の ASC / DESC (STORING のカラムは NULL) だけなので、この経路は fake driver でしか通せない
+	for _, tt := range []struct {
+		name               string
+		primaryKeyOrdering string
+		indexOrdering      string
+	}{
+		{name: "PrimaryKey,lowercase", primaryKeyOrdering: "desc", indexOrdering: "ASC"},
+		{name: "PrimaryKey,empty", primaryKeyOrdering: "", indexOrdering: "ASC"},
+		{name: "Index,lowercase", primaryKeyOrdering: "ASC", indexOrdering: "desc"},
+		{name: "Index,empty", primaryKeyOrdering: "ASC", indexOrdering: ""},
+	} {
+		t.Run(tt.name, func(t *testing.T) {
+			t.Parallel()
+
+			indexColumns := []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}
+			fixture := showCreateAllTablesFixture{"T": {
+				queryShowCreateAllTables: {Columns: []string{"TABLE_NAME", "COLUMN_NAME", "COLUMN_DEFAULT", "IS_NULLABLE", "SPANNER_TYPE"}, Values: [][]driver.Value{
+					{"T", "Id", nil, "NO", "STRING(MAX)"},
+					{"T", "Name", nil, "YES", "STRING(MAX)"},
+				}},
+				queryShowTableColumnOptions: {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
+				queryShowPrimaryKey: {Columns: indexColumns, Values: [][]driver.Value{
+					{"PRIMARY_KEY", "PRIMARY_KEY", "Id", tt.primaryKeyOrdering, int64(1)},
+				}},
+				querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
+				querySelectIndexes: {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}, Values: [][]driver.Value{
+					{"TByName", false},
+				}},
+				queryShowIndexes: {Columns: indexColumns, Values: [][]driver.Value{
+					{"TByName", "INDEX", "Name", tt.indexOrdering, int64(1)},
+				}},
+			}}
+			db := fakesql.OpenDB(fixture.queryFunc(t, []string{"T"}, "", nil))
+			t.Cleanup(func() { _ = db.Close() })
+
+			_, err := ShowCreateAllTables(context.Background(), db)
+			require.ErrorIs(t, err, apperr.ErrUnexpectedColumnOrdering)
 		})
 	}
 }

@@ -198,8 +198,28 @@ type informationSchemaPrimaryKey struct {
 	OrdinalPosition int    `db:"ORDINAL_POSITION"`
 }
 
-// columnOrderingDesc は INDEX_COLUMNS.COLUMN_ORDERING が降順のカラムを表す値
-const columnOrderingDesc = "DESC"
+const (
+	// columnOrderingAsc は INDEX_COLUMNS.COLUMN_ORDERING が昇順のカラムを表す値
+	columnOrderingAsc = "ASC"
+	// columnOrderingDesc は INDEX_COLUMNS.COLUMN_ORDERING が降順のカラムを表す値
+	columnOrderingDesc = "DESC"
+)
+
+// columnWithOrdering は INDEX_COLUMNS の COLUMN_NAME と COLUMN_ORDERING から、主キーやインデックスのカラムの書き方 (例: "CreatedAt DESC") を返す。
+//
+// NOTE: ASC は省略時の既定値なので DESC だけを出力する。DESC を落とすと定義ファイルと食い違い、diff / apply が
+// 主キーなら DROP TABLE + CREATE TABLE を、インデックスなら DROP INDEX + CREATE INDEX を毎回生成してしまう。
+// ASC でも DESC でもない値はエラーにする。ASC として出力すると、実際の並び順と食い違うかもしれない DDL を黙って出力することになる。
+func columnWithOrdering(columnName, columnOrdering string) (string, error) {
+	switch columnOrdering {
+	case columnOrderingAsc:
+		return columnName, nil
+	case columnOrderingDesc:
+		return columnName + " " + columnOrderingDesc, nil
+	default:
+		return "", apperr.Errorf("column=%s: COLUMN_ORDERING=%q: %w", columnName, columnOrdering, apperr.ErrUnexpectedColumnOrdering)
+	}
+}
 
 const (
 	querySelectIndexes = `SELECT DISTINCT INDEX_NAME, IS_UNIQUE FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = ? AND INDEX_TYPE != "PRIMARY_KEY";`
@@ -331,12 +351,11 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			query.WriteString(" PRIMARY KEY (")
 			primaryKeyColumnsLastIndex := len(primaryKeyColumns) - 1
 			for i, pk := range primaryKeyColumns {
-				query.WriteString(pk.ColumnName)
-				// NOTE: ASC は省略時の既定値なので DESC だけを出力する。
-				// DESC を落とすと定義ファイルの主キーと食い違い、diff / apply が DROP TABLE + CREATE TABLE を生成してしまう。
-				if pk.ColumnOrdering == columnOrderingDesc {
-					query.WriteString(" " + columnOrderingDesc)
+				column, err := columnWithOrdering(pk.ColumnName, pk.ColumnOrdering)
+				if err != nil {
+					return "", apperr.Errorf("table=%s: primary key: %w", tbl.TableName, err)
 				}
+				query.WriteString(column)
 				if i != primaryKeyColumnsLastIndex {
 					query.WriteString(", ")
 				}
@@ -372,7 +391,9 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 			if err := dbz.QueryContext(ctx, &allIndexColumns, queryShowIndexes, tbl.TableName); err != nil {
 				return "", apperr.Errorf("dbz.QueryContext: %w", err)
 			}
-			writeCreateIndexes(&query, tbl.TableName, indexNames, allIndexColumns)
+			if err := writeCreateIndexes(&query, tbl.TableName, indexNames, allIndexColumns); err != nil {
+				return "", apperr.Errorf("table=%s: writeCreateIndexes: %w", tbl.TableName, err)
+			}
 		}
 
 		if tblIdx != tablesLastIndex {
@@ -387,7 +408,7 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 //
 // allIndexColumns は queryShowIndexes の結果で、テーブルの全インデックスのカラムを含むため、インデックス名で振り分けて使う。
 // 振り分けずに使うと、全インデックスのカラムが連結された CREATE INDEX を出力してしまう。
-func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*informationSchemaIndexName, allIndexColumns []*informationSchemaIndex) {
+func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*informationSchemaIndexName, allIndexColumns []*informationSchemaIndex) error {
 	for _, indexName := range indexNames {
 		// カラム名と並び順 (例: "CreatedAt DESC")
 		columns := make([]string, 0)
@@ -395,11 +416,9 @@ func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*
 			if idx.IndexName != indexName.IndexName {
 				continue
 			}
-			// NOTE: 主キーと同じく、ASC は省略時の既定値なので DESC だけを出力する。
-			// DESC を落とすと定義ファイルのインデックスと食い違い、diff / apply が毎回 DROP INDEX + CREATE INDEX を生成してしまう。
-			column := idx.ColumnName
-			if idx.ColumnOrdering == columnOrderingDesc {
-				column += " " + columnOrderingDesc
+			column, err := columnWithOrdering(idx.ColumnName, idx.ColumnOrdering)
+			if err != nil {
+				return apperr.Errorf("index=%s: %w", indexName.IndexName, err)
 			}
 			columns = append(columns, column)
 		}
@@ -410,4 +429,5 @@ func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*
 		}
 		fmt.Fprintf(query, "INDEX %s ON %s (%s);\n", indexName.IndexName, tableName, strings.Join(columns, ", "))
 	}
+	return nil
 }
