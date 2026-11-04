@@ -140,7 +140,8 @@ func TestShowCreateAllTables(t *testing.T) {
 				{"UsersByName", "INDEX", "Name", "ASC", int64(1)},
 			}},
 		},
-		// 複合主キー・ ROW DELETION POLICY ・複合 INDEX を持ち、カラムオプションを持たないテーブル
+		// DESC を含む複合主キー・ ROW DELETION POLICY ・ DESC を含む複合 INDEX を持ち、カラムオプションを持たないテーブル。
+		// DESC の出力形式 (大文字・前後の空白) はパーサーを通すラウンドトリップのテストでは観測できないので、ここで出力全体を固定する
 		"Logs": {
 			queryShowCreateAllTables: {Columns: columnColumns, Values: [][]driver.Value{
 				{"Logs", "UserId", nil, "NO", "STRING(36)"},
@@ -151,7 +152,7 @@ func TestShowCreateAllTables(t *testing.T) {
 			queryShowTableColumnOptions: {Columns: columnOptionColumns},
 			queryShowPrimaryKey: {Columns: indexColumns, Values: [][]driver.Value{
 				{"PRIMARY_KEY", "PRIMARY_KEY", "UserId", "ASC", int64(1)},
-				{"PRIMARY_KEY", "PRIMARY_KEY", "LogId", "ASC", int64(2)},
+				{"PRIMARY_KEY", "PRIMARY_KEY", "LogId", "DESC", int64(2)},
 			}},
 			querySelectTableOptionRowDeletionPolicy: {Columns: rowDeletionPolicyColumns, Values: [][]driver.Value{
 				{"Logs", "OLDER_THAN(LoggedAt, INTERVAL 30 DAY)"},
@@ -161,7 +162,7 @@ func TestShowCreateAllTables(t *testing.T) {
 			}},
 			queryShowIndexes: {Columns: indexColumns, Values: [][]driver.Value{
 				{"LogsByUserIdLoggedAt", "INDEX", "UserId", "ASC", int64(1)},
-				{"LogsByUserIdLoggedAt", "INDEX", "LoggedAt", "ASC", int64(2)},
+				{"LogsByUserIdLoggedAt", "INDEX", "LoggedAt", "DESC", int64(2)},
 			}},
 		},
 	}
@@ -184,9 +185,9 @@ CREATE TABLE Logs (
     LogId INT64 NOT NULL,
     LoggedAt TIMESTAMP NOT NULL,
     Message STRING(MAX)
-) PRIMARY KEY (UserId, LogId),
+) PRIMARY KEY (UserId, LogId DESC),
 ROW DELETION POLICY (OLDER_THAN(LoggedAt, INTERVAL 30 DAY));
-CREATE INDEX LogsByUserIdLoggedAt ON Logs (UserId, LoggedAt);
+CREATE INDEX LogsByUserIdLoggedAt ON Logs (UserId, LoggedAt DESC);
 `
 		actual, err := ShowCreateAllTables(context.Background(), db)
 		require.NoError(t, err)
