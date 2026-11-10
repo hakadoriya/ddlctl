@@ -113,7 +113,7 @@ func TestShowCreateAllTables(t *testing.T) {
 		columnOptionColumns      = []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}
 		indexColumns             = []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}
 		rowDeletionPolicyColumns = []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}
-		indexNameColumns         = []string{"INDEX_NAME", "IS_UNIQUE"}
+		indexNameColumns         = []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}
 	)
 
 	tableNames := []string{"Users", "Logs"}
@@ -135,7 +135,7 @@ func TestShowCreateAllTables(t *testing.T) {
 			}},
 			querySelectTableOptionRowDeletionPolicy: {Columns: rowDeletionPolicyColumns},
 			querySelectIndexes: {Columns: indexNameColumns, Values: [][]driver.Value{
-				{"UsersByName", true},
+				{"UsersByName", true, false},
 			}},
 			queryShowIndexes: {Columns: indexColumns, Values: [][]driver.Value{
 				{"UsersByName", "INDEX", "Name", "ASC", int64(1)},
@@ -159,7 +159,7 @@ func TestShowCreateAllTables(t *testing.T) {
 				{"Logs", "OLDER_THAN(LoggedAt, INTERVAL 30 DAY)"},
 			}},
 			querySelectIndexes: {Columns: indexNameColumns, Values: [][]driver.Value{
-				{"LogsByUserIdLoggedAt", false},
+				{"LogsByUserIdLoggedAt", false, false},
 			}},
 			queryShowIndexes: {Columns: indexColumns, Values: [][]driver.Value{
 				{"LogsByUserIdLoggedAt", "INDEX", "UserId", "ASC", int64(1)},
@@ -257,8 +257,8 @@ func TestShowCreateAllTables_UnexpectedColumnOrdering(t *testing.T) {
 					{"PRIMARY_KEY", "PRIMARY_KEY", "Id", tt.primaryKeyOrdering, int64(1)},
 				}},
 				querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
-				querySelectIndexes: {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}, Values: [][]driver.Value{
-					{"TByName", false},
+				querySelectIndexes: {Columns: []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}, Values: [][]driver.Value{
+					{"TByName", false, false},
 				}},
 				queryShowIndexes: {Columns: indexColumns, Values: [][]driver.Value{
 					{"TByName", "INDEX", "Name", tt.indexOrdering, int64(1)},
@@ -330,7 +330,7 @@ func TestShowCreateAllTables_PrimaryKeyOrderingRoundTrip(t *testing.T) {
 			queryShowTableColumnOptions:             {Columns: []string{"COLUMN_NAME", "OPTION_NAME", "OPTION_VALUE"}},
 			queryShowPrimaryKey:                     primaryKey,
 			querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
-			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}},
 		}}
 		db := fakesql.OpenDB(fixture.queryFunc(t, []string{"T"}, "", nil))
 		defer func() { _ = db.Close() }()
@@ -384,10 +384,11 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 	ascSpellings := []string{"", " ASC", " asc"}
 	descSpellings := []string{" DESC", " desc", " Desc"}
 
-	// テーブルに張るインデックスの組 (インデックス数と、各インデックスのカラム数・先頭カラム・ UNIQUE の有無・各カラムの並び順と定義ファイル側の書き方) を生成し、
-	// ShowCreateAllTables の出力をパースした結果が、同じインデックスを書いた DDL と差分なしになることを検証する。
-	// あわせて、インデックスがあれば、そのうち 1 つについて、カラムを 1 つ別のカラムに変えた DDL とも、1 カラムだけ並び順を反転した DDL とも差分が出ることを検証する。
+	// テーブルに張るインデックスの組 (インデックス数と、各インデックスのカラム数・先頭カラム・ UNIQUE の有無・ Cloud Spanner が管理するかどうか・各カラムの並び順と定義ファイル側の書き方) を生成し、
+	// ShowCreateAllTables の出力をパースした結果が、管理されていないインデックスだけを書いた DDL と差分なしになることを検証する。
+	// あわせて、管理されていないインデックスがあれば、そのうち 1 つについて、カラムを 1 つ別のカラムに変えた DDL とも、1 カラムだけ並び順を反転した DDL とも差分が出ることを検証する。
 	// 差分なしにならないと ddlctl diff / apply が毎回 DROP INDEX + CREATE INDEX を生成する。
+	// 外部キーのために Cloud Spanner が管理するインデックスは定義ファイルに書かないので、出力すると diff / apply がその DROP INDEX を生成し、Cloud Spanner に拒否される。
 	// 差分が出ないと、インデックスのカラムや並び順の変更を見落とす。
 	// NOTE: インデックス数を specs の長さで決めると、testing/quick はスライスの長さを 0 から 49 で一様に選ぶため、ほとんどが上限に切り詰められる。
 	// インデックス数は別の引数で 0 から maxIndexes まで一様に選ぶ。
@@ -406,23 +407,32 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 			columnDefs = append(columnDefs, "    "+name+" STRING(MAX)")
 		}
 
-		indexNames := &fakesql.Rows{Columns: []string{"INDEX_NAME", "IS_UNIQUE"}}
+		indexNames := &fakesql.Rows{Columns: []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}}
 		// 実際の queryShowIndexes と同じく、テーブルの全インデックスのカラムを INDEX_NAME ・ ORDINAL_POSITION の順に返す
 		indexColumns := &fakesql.Rows{Columns: []string{"INDEX_NAME", "INDEX_TYPE", "COLUMN_NAME", "COLUMN_ORDERING", "ORDINAL_POSITION"}}
 		indexDDLs := make([]string, 0, len(specs))
 		changedIndexDDLs := make([]string, 0, len(specs))
 		flippedIndexDDLs := make([]string, 0, len(specs))
+		managedOf := func(spec uint16) bool { return spec/(maxIndexColumns*numIndexableColumns*2)%2 == 1 }
+		// カラムや並び順を変える対象は、定義ファイルに書く (Cloud Spanner が管理していない) インデックスから選ぶ
+		unmanaged := make([]int, 0, len(specs))
+		for i, spec := range specs {
+			if !managedOf(spec) {
+				unmanaged = append(unmanaged, i)
+			}
+		}
 		changedIndex := -1
-		if len(specs) > 0 {
-			changedIndex = int(changed) % len(specs)
+		if len(unmanaged) > 0 {
+			changedIndex = unmanaged[int(changed)%len(unmanaged)]
 		}
 		for i, spec := range specs {
 			name := fmt.Sprintf("Idx%d", i)
 			numColumns := int(spec)%maxIndexColumns + 1
 			firstColumn := int(spec) / maxIndexColumns % numIndexableColumns
 			unique := spec/(maxIndexColumns*numIndexableColumns)%2 == 1
+			managed := managedOf(spec)
 
-			indexNames.Values = append(indexNames.Values, []driver.Value{name, unique})
+			indexNames.Values = append(indexNames.Values, []driver.Value{name, unique, managed})
 			// 各カラムの名前と、定義ファイル側の並び順の書き方、およびその並び順を反転した書き方
 			columnNames := make([]string, 0, numColumns)
 			orderings := make([]string, 0, numColumns)
@@ -450,6 +460,10 @@ func TestShowCreateAllTables_IndexColumnsRoundTrip(t *testing.T) {
 					parts = append(parts, columnNames[j]+orderings[j])
 				}
 				return createIndex + name + " ON T (" + strings.Join(parts, ", ") + ");\n"
+			}
+			if managed {
+				// Cloud Spanner が管理するインデックスは INFORMATION_SCHEMA にだけあり、定義ファイルには書かない
+				continue
 			}
 			indexDDL := createIndexOf(columnNames, orderings)
 			indexDDLs = append(indexDDLs, indexDDL)
@@ -594,7 +608,7 @@ func TestShowCreateAllTables_InterleaveInParentRoundTrip(t *testing.T) {
 					{"PRIMARY_KEY", "PRIMARY_KEY", "Id", "ASC", int64(1)},
 				}},
 				querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
-				querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+				querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}},
 			}
 		}
 		// flipped 番目のテーブルだけ ON DELETE の動作を反転した DDL を返す。flipped が -1 なら反転しない
@@ -670,7 +684,7 @@ func TestShowCreateAllTables_InterleaveInParent(t *testing.T) {
 				{"PRIMARY_KEY", "PRIMARY_KEY", "UserId", "ASC", int64(1)},
 			}},
 			querySelectTableOptionRowDeletionPolicy: {Columns: []string{"TABLE_NAME", "ROW_DELETION_POLICY_EXPRESSION"}},
-			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE"}},
+			querySelectIndexes:                      {Columns: []string{"INDEX_NAME", "IS_UNIQUE", "SPANNER_IS_MANAGED"}},
 		}
 		if keyColumn != "" {
 			r[queryShowCreateAllTables].Values = append(r[queryShowCreateAllTables].Values, []driver.Value{name, keyColumn, nil, "NO", "TIMESTAMP"})
