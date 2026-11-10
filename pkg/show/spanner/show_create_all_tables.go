@@ -222,12 +222,15 @@ func columnWithOrdering(columnName, columnOrdering string) (string, error) {
 }
 
 const (
-	querySelectIndexes = `SELECT DISTINCT INDEX_NAME, IS_UNIQUE FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = ? AND INDEX_TYPE != "PRIMARY_KEY";`
+	querySelectIndexes = `SELECT DISTINCT INDEX_NAME, IS_UNIQUE, SPANNER_IS_MANAGED FROM INFORMATION_SCHEMA.INDEXES WHERE TABLE_NAME = ? AND INDEX_TYPE != "PRIMARY_KEY";`
 )
 
 type informationSchemaIndexName struct {
+	// INDEXES https://cloud.google.com/spanner/docs/information-schema?hl=ja#indexes
 	IndexName string `db:"INDEX_NAME"`
 	IsUnique  bool   `db:"IS_UNIQUE"`
+	// SpannerIsManaged は、外部キーのために Cloud Spanner が作成・管理するインデックス (例: IDX_Albums_SingerId_B6F40A4873EE691C) なら true
+	SpannerIsManaged bool `db:"SPANNER_IS_MANAGED"`
 }
 
 const (
@@ -410,6 +413,13 @@ func ShowCreateAllTables(ctx context.Context, db sqlQueryerContext, opts ...Show
 // 振り分けずに使うと、全インデックスのカラムが連結された CREATE INDEX を出力してしまう。
 func writeCreateIndexes(query *strings.Builder, tableName string, indexNames []*informationSchemaIndexName, allIndexColumns []*informationSchemaIndex) error {
 	for _, indexName := range indexNames {
+		// NOTE: 外部キーのために Cloud Spanner が作成・管理するインデックスは出力しない。定義ファイルには書かないので、
+		// 出力すると diff / apply がその DROP INDEX を生成し、Cloud Spanner に "It is in use by foreign keys" で拒否される。
+		// querySelectIndexes の WHERE で絞らずにここで除くのは、fake driver のテストで検証できるようにするため。
+		if indexName.SpannerIsManaged {
+			continue
+		}
+
 		// カラム名と並び順 (例: "CreatedAt DESC")
 		columns := make([]string, 0)
 		for _, idx := range allIndexColumns {
